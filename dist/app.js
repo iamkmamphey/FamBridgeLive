@@ -11,21 +11,23 @@ let sourceIndex = 0, recordingTimer, seconds = 0, cameraStream, channel
 const sourcePresets = [["camera","CAM","Paste guest invitation link…"],["zoom","Z","Paste Zoom meeting link…"],["meet","M","Paste Google Meet link…"],["rtmp","↗","Paste RTMP or livestream URL…"]]
 
 function roomKey(id = roomId) { return `livebridge:room:${id}` }
-function readRoom(id = roomId) { try { return JSON.parse(localStorage.getItem(roomKey(id))) || { id, title: "Untitled live room", participants: {} } } catch { return { id, title: "Untitled live room", participants: {} } } }
+function readRoom(id = roomId) { try { const room = JSON.parse(localStorage.getItem(roomKey(id))) || { id, title: "Untitled live room", participants: {}, sources: {} }; room.participants ||= {}; room.sources ||= {}; return room } catch { return { id, title: "Untitled live room", participants: {}, sources: {} } } }
 function saveRoom(room) { localStorage.setItem(roomKey(room.id), JSON.stringify(room)); const rooms = JSON.parse(localStorage.getItem(ROOM_INDEX_KEY) || "[]").filter(r => r.id !== room.id); rooms.unshift({ id: room.id, title: room.title, updatedAt: Date.now() }); localStorage.setItem(ROOM_INDEX_KEY, JSON.stringify(rooms.slice(0, 20))); renderRoomPicker() }
 function inviteUrl() { const url = new URL(location.href); url.searchParams.set("room", roomId); url.hash = "join"; return url.toString() }
 function initials(name) { return name.split(/\s+/).map(x => x[0]).join("").slice(0, 2).toUpperCase() || "G" }
 function colorFor(value) { let n = 0; for (const c of value) n = (n * 31 + c.charCodeAt(0)) >>> 0; return `hsl(${n % 360} 28% 40%)` }
 function ensureRoomUrl() { const url = new URL(location.href); url.searchParams.set("room", roomId); history.replaceState({}, "", url) }
 function renderRoomPicker() { const rooms = JSON.parse(localStorage.getItem(ROOM_INDEX_KEY) || "[]"); $("#roomPicker").innerHTML = [{ id: roomId, title: readRoom().title }, ...rooms.filter(r => r.id !== roomId)].map(r => `<option value="${r.id}" ${r.id === roomId ? "selected" : ""}>${r.title} · ${r.id}</option>`).join("") }
-function addSource(preset = sourcePresets[sourceIndex++ % sourcePresets.length]) { const row = document.createElement("div"); row.className = "source-item"; row.innerHTML = `<span class="source-icon ${preset[0]}">${preset[1]}</span><input placeholder="${preset[2]}" aria-label="Source link"><button aria-label="Remove source">×</button>`; row.querySelector("button").onclick = () => row.remove(); $("#sourceList").append(row) }
+function addSource(preset = sourcePresets[sourceIndex++ % sourcePresets.length]) { const row = document.createElement("div"); row.className = "source-item"; row.dataset.sourceType = preset[0]; row.innerHTML = `<span class="source-icon ${preset[0]}">${preset[1]}</span><input placeholder="${preset[2]}" aria-label="Source link"><button aria-label="Remove source">×</button>`; row.querySelector("button").onclick = () => row.remove(); $("#sourceList").append(row) }
 sourcePresets.forEach(addSource)
 
 function renderParticipants() {
   const now = Date.now(), room = readRoom()
-  participants = Object.values(room.participants || {}).filter(p => now - p.lastSeen < PRESENCE_TTL)
-  $("#participantGrid").innerHTML = participants.map((p, i) => `<article class="participant ${i === 0 ? "featured" : ""}" tabindex="0" data-id="${p.id}"><div class="participant-bg" style="--c1:${colorFor(p.id)};--c2:#202936"><div class="person-face">${initials(p.name)}</div></div><div class="participant-top"><strong>${p.name}</strong><span class="source-chip">${p.role || "Guest link"}</span></div><div class="participant-bottom"><span>● Live</span><span class="mute-indicator">♩</span><span class="signal"><i></i><i></i><i></i></span></div></article>`).join("") || `<div class="empty-room"><strong>No one is here yet</strong><span>Copy the invite link to bring guests into this room.</span></div>`
-  $("#participantCount").textContent = participants.length
+  const livePeople = Object.values(room.participants || {}).filter(p => now - p.lastSeen < PRESENCE_TTL).map(p => ({ ...p, status: "Live" }))
+  const linkedSources = Object.values(room.sources || {}).map(s => ({ ...s, status: "Linked" }))
+  participants = [...livePeople, ...linkedSources]
+  $("#participantGrid").innerHTML = participants.map((p, i) => `<article class="participant ${i === 0 ? "featured" : ""}" tabindex="0" data-id="${p.id}"><div class="participant-bg" style="--c1:${colorFor(p.id)};--c2:#202936"><div class="person-face">${initials(p.name)}</div></div><div class="participant-top"><strong>${p.name}</strong><span class="source-chip">${p.role || "Guest link"}</span></div><div class="participant-bottom"><span>● ${p.status}</span><span class="mute-indicator">♩</span><span class="signal"><i></i><i></i><i></i></span></div></article>`).join("") || `<div class="empty-room"><strong>No one is here yet</strong><span>Copy the invite link or connect a source to bring guests into this room.</span></div>`
+  $("#participantCount").textContent = livePeople.length
   document.querySelectorAll(".participant").forEach(card => card.onclick = () => { document.querySelector(".participant.featured")?.classList.remove("featured"); card.classList.add("featured"); showToast(`${participants.find(p => p.id === card.dataset.id)?.name} moved to the main stage`) })
 }
 function renderMessages() { $("#messages").innerHTML = messages.map((m, i) => `<div class="message ${m[0] === "You" ? "host" : ""}"><span class="message-avatar" style="--avatar:${m[2]}">${m[0][0]}</span><div><div class="message-head"><b>${m[0]}</b><time>${i + 1}m</time></div><p>${m[1]}</p></div></div>`).join(""); $("#messageCount").textContent = messages.length }
@@ -35,11 +37,33 @@ function announce() { if (!identity) return; const room = readRoom(); room.title
 function openRoom(id) { channel?.close(); roomId = id; ensureRoomUrl(); const room = readRoom(); $("#roomTitle").textContent = room.title; channel = new BroadcastChannel(`livebridge:${roomId}`); channel.onmessage = renderParticipants; announce(); renderRoomPicker(); showToast(`Loaded ${room.title}`) }
 
 $("#joinForm").onsubmit = e => { e.preventDefault(); const name = $("#joinName").value.trim(); identity = { id: identity?.id || crypto.randomUUID(), name, role: location.hash === "#join" ? "Guest link" : "Host" }; localStorage.setItem(IDENTITY_KEY, JSON.stringify(identity)); $("#joinDialog").close(); announce(); showToast(`Joined room as ${name}`) }
-$("#newRoomBtn").onclick = () => { roomId = crypto.randomUUID().slice(0, 8); saveRoom({ id: roomId, title: "Untitled live room", participants: {} }); openRoom(roomId) }
+$("#newRoomBtn").onclick = () => { roomId = crypto.randomUUID().slice(0, 8); saveRoom({ id: roomId, title: "Untitled live room", participants: {}, sources: {} }); openRoom(roomId) }
 $("#roomPicker").onchange = e => openRoom(e.target.value)
 $("#roomTitle").addEventListener("blur", announce)
 $("#addSourceBtn").onclick = () => addSource()
-$("#connectBtn").onclick = () => { const urls = [...document.querySelectorAll(".source-item input")].filter(x => x.value.trim()); showToast(urls.length ? `${urls.length} source${urls.length > 1 ? "s" : ""} queued for secure connection` : "Add at least one live or guest link first") }
+$("#connectBtn").onclick = () => {
+  const rows = [...document.querySelectorAll(".source-item")].filter(row => row.querySelector("input").value.trim())
+  if (!rows.length) return showToast("Add at least one live or guest link first")
+  const room = readRoom()
+  let connected = 0, invalid = 0
+  for (const row of rows) {
+    const input = row.querySelector("input")
+    try {
+      const url = new URL(input.value.trim())
+      const type = row.dataset.sourceType || "camera"
+      const labels = { zoom: "Zoom source", meet: "Google Meet source", rtmp: "RTMP stream", camera: "Guest link" }
+      const id = `source-${type}-${url.hostname}-${url.pathname}`
+      room.sources[id] = { id, name: labels[type], role: url.hostname.replace(/^www\./, ""), url: url.toString() }
+      row.classList.add("connected")
+      input.disabled = true
+      connected++
+    } catch { invalid++; row.classList.add("invalid") }
+  }
+  saveRoom(room)
+  channel?.postMessage({ type: "sources" })
+  renderParticipants()
+  showToast(connected ? `${connected} source${connected > 1 ? "s" : ""} connected and added to the room${invalid ? ` · ${invalid} invalid` : ""}` : "Enter a complete URL beginning with https://")
+}
 $("#copyInviteBtn").onclick = $("#inviteBtn").onclick = async () => { const url = inviteUrl(); try { await navigator.clipboard.writeText(url); showToast("Room invite link copied") } catch { showToast("Invite link ready: " + url) } }
 $("#cameraBtn").onclick = async () => { try { if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; $("#hostVideo").style.display = "none"; $(".camera-placeholder").style.display = "flex"; $("#cameraState").textContent = "Camera off"; $("#cameraBtn").classList.remove("active") } else { cameraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true }); $("#hostVideo").srcObject = cameraStream; $("#hostVideo").style.display = "block"; $(".camera-placeholder").style.display = "none"; $("#cameraState").textContent = "Camera live"; $("#cameraBtn").classList.add("active") } } catch { showToast("Camera permission was not granted") } }
 $("#micBtn").onclick = e => { e.currentTarget.classList.toggle("active"); const enabled = e.currentTarget.classList.contains("active"); cameraStream?.getAudioTracks().forEach(t => t.enabled = enabled); showToast(enabled ? "Microphone on" : "Microphone muted") }
