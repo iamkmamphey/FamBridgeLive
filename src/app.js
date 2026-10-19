@@ -22,6 +22,17 @@ function inviteUrl() { const url = new URL(location.href); url.searchParams.set(
 function initials(name) { return name.split(/\s+/).map(x => x[0]).join("").slice(0, 2).toUpperCase() || "G" }
 function safe(value) { const element = document.createElement("span"); element.textContent = String(value ?? ""); return element.innerHTML }
 function renderIdentity() { if (identity?.role !== "Host") return; const shortName = initials(identity.name); $("#hostName").textContent = identity.name; $("#hostInitials").textContent = shortName; $("#hostAvatar").textContent = shortName; $("#hostAvatar").setAttribute("aria-label", `${identity.name}, host`) }
+function applyRoleView() {
+  const guest = identity?.role === "Guest link" || location.hash === "#join"
+  document.body.classList.toggle("guest-mode", guest)
+  if (!identity) return
+  const shortName = initials(identity.name)
+  $("#hostName").textContent = identity.name; $("#hostInitials").textContent = shortName; $("#hostAvatar").textContent = shortName
+  $("#identityRole").textContent = guest ? "Guest" : "Host"; $("#roleBadge").textContent = guest ? "GUEST" : "HOST"
+  $("#cameraEyebrow").textContent = guest ? "YOUR CAMERA" : "02 / HOST CAMERA"
+  $("#roomTitle").contentEditable = guest ? "false" : "true"
+  if (guest && activeTab === "queue") { activeTab = "chat"; document.querySelector('[data-tab="chat"]')?.classList.add("active") }
+}
 function colorFor(value) { let n = 0; for (const c of value) n = (n * 31 + c.charCodeAt(0)) >>> 0; return `hsl(${n % 360} 28% 40%)` }
 function ensureRoomUrl() { const url = new URL(location.href); url.searchParams.set("room", roomId); history.replaceState({}, "", url) }
 function renderRoomPicker() { const rooms = JSON.parse(localStorage.getItem(ROOM_INDEX_KEY) || "[]"); $("#roomPicker").innerHTML = [{ id: roomId, title: readRoom().title }, ...rooms.filter(r => r.id !== roomId)].map(r => `<option value="${r.id}" ${r.id === roomId ? "selected" : ""}>${r.title} · ${r.id}</option>`).join("") }
@@ -125,7 +136,7 @@ function formatTime(s) { return new Date(s * 1000).toISOString().slice(11, 19) }
 function announce() { if (!identity) return; const room = readRoom(); room.title = $("#roomTitle").textContent.trim() || room.title; if (!liveKitConfigured) room.participants[identity.id] = { ...identity, lastSeen: Date.now(), role: identity.role || "Guest link" }; saveRoom(room); channel?.postMessage({ type: "presence" }); renderParticipants(); renderActivity() }
 async function openRoom(id) { channel?.close(); if (liveRoom) await liveRoom.disconnect(); roomId = id; ensureRoomUrl(); const room = readRoom(); $("#roomTitle").textContent = room.title; channel = new BroadcastChannel(`fambridgelive:${roomId}`); channel.onmessage = () => { renderParticipants(); renderActivity() }; announce(); renderRoomPicker(); renderActivity(); if (identity) connectLiveRoom(); showToast(`Loaded ${room.title}`) }
 
-$("#joinForm").onsubmit = async e => { e.preventDefault(); const name = $("#joinName").value.trim(); const role = location.hash === "#join" ? "Guest link" : "Host"; hostAccessKey = role === "Host" ? $("#hostAccessKey").value : ""; identity = { id: identity?.id || crypto.randomUUID(), name, role }; sessionStorage.setItem(IDENTITY_KEY, JSON.stringify(identity)); localStorage.setItem(`${IDENTITY_KEY}:last-name`, name); renderIdentity(); $("#joinDialog").close(); announce(); await connectLiveRoom(); hostAccessKey = ""; $("#hostAccessKey").value = ""; showToast(role === "Host" ? `Host set to ${name}` : `Joined room as ${name}`) }
+$("#joinForm").onsubmit = async e => { e.preventDefault(); const name = $("#joinName").value.trim(); const role = location.hash === "#join" ? "Guest link" : "Host"; hostAccessKey = role === "Host" ? $("#hostAccessKey").value : ""; identity = { id: identity?.id || crypto.randomUUID(), name, role }; sessionStorage.setItem(IDENTITY_KEY, JSON.stringify(identity)); localStorage.setItem(`${IDENTITY_KEY}:last-name`, name); applyRoleView(); renderIdentity(); $("#joinDialog").close(); announce(); await connectLiveRoom(); hostAccessKey = ""; $("#hostAccessKey").value = ""; showToast(role === "Host" ? `Host set to ${name}` : `Joined room as ${name}`) }
 $("#newRoomBtn").onclick = () => { roomId = crypto.randomUUID().replaceAll("-", ""); saveRoom({ id: roomId, title: "Untitled live room", participants: {}, sources: {}, messages: [] }); openRoom(roomId) }
 $("#roomPicker").onchange = e => openRoom(e.target.value)
 $("#savedSourcePicker").onchange = e => { const source = savedSources()[Number(e.target.value)]; if (!source) return; addSource(sourcePreset(source.type)); const row = $("#sourceList").lastElementChild; row.querySelector("input").value = source.url; e.target.value = ""; showToast("Saved link loaded") }
@@ -194,4 +205,5 @@ else [...$("#recordFormat").options].forEach(option => { option.disabled = !Medi
 renderSavedSourcePicker(); installTooltips(); new MutationObserver(installTooltips).observe(document.body, { childList: true, subtree: true })
 ensureRoomUrl(); fetch("/api/livekit/status").then(r => r.json()).then(status => { liveKitConfigured = status.configured; $(".status-pill").innerHTML = status.configured ? "<i></i> LiveKit ready" : "<i></i> Setup needed"; openRoom(roomId) }).catch(() => openRoom(roomId)); renderActivity(); setInterval(announce, 5000)
 if (identity) renderIdentity()
+applyRoleView()
 if (!identity || location.hash === "#join" || identity?.role === "Host") { const joiningAsGuest = location.hash === "#join"; $("#joinNameLabel").textContent = joiningAsGuest ? "Guest display name" : "Host display name"; $("#hostCodeField").hidden = joiningAsGuest; $("#hostAccessKey").required = !joiningAsGuest; $("#joinName").value = joiningAsGuest ? "" : (identity?.name || localStorage.getItem(`${IDENTITY_KEY}:last-name`) || ""); $("#joinDialog").showModal() } else announce()
