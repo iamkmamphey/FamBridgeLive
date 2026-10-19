@@ -16,6 +16,7 @@
     .source-heading{margin-top:18px}.empty-room{grid-column:1/-1;min-height:260px;display:grid;place-content:center;gap:8px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:14px}.empty-room strong{color:var(--ink);font:600 18px 'Space Grotesk'}
     .source-item.connected{border-color:#4f785d;background:#101b15}.source-item.connected input{color:#7ed6a1}.source-item.invalid{border-color:#7b3937}
     .source-icon.whatsapp{background:#1f6d48}.host-preview video.screen-share{transform:none}.empty-activity{display:grid;place-items:center;min-height:220px;color:var(--muted);text-align:center}.message-form[hidden]{display:none}
+    .participant-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}.participant-bg:has(.participant-video) .person-face{display:none}.participant-top,.participant-bottom{z-index:2}
   </style>
 </head>
 <body>
@@ -35,7 +36,7 @@
         <label class="room-picker"><span>Saved links</span><select id="savedSourcePicker" aria-label="Reuse a saved source link"><option value="">Choose a saved link…</option></select></label>
         <div id="sourceList" class="source-list"></div>
         <button class="connect-btn" id="connectBtn"><span>Connect sources</span><kbd>⌘ ↵</kbd></button>
-        <p class="privacy-note">🔗 Everyone opening this room link joins the same room.</p>
+        <p class="privacy-note">🔗 Everyone opening this room link joins the same LiveKit room.</p>
       </section>
 
       <section class="panel-card host-card">
@@ -83,20 +84,21 @@
       <div class="dialog-head"><div><span class="eyebrow">JOIN ROOM</span><h2>How should we introduce you?</h2></div></div>
       <p class="dialog-intro">Your name will appear for everyone using this room link.</p>
       <label class="join-name"><span id="joinNameLabel">Host display name</span><input id="joinName" maxlength="50" autocomplete="name" placeholder="Your name" required></label>
+      <label class="join-name" id="hostCodeField"><span>Host access key</span><input id="hostAccessKey" type="password" maxlength="128" autocomplete="current-password" placeholder="Configured in the server environment" required></label>
       <button class="connect-btn" type="submit">Join room</button>
     </form>
   </dialog>
   <dialog id="integrationDialog">
     <form method="dialog" class="dialog-card">
       <div class="dialog-head"><div><span class="eyebrow">PRODUCTION SETUP</span><h2>Connections & APIs</h2></div><button class="icon-btn" value="cancel" aria-label="Close">×</button></div>
-      <p class="dialog-intro">Use a video-room provider for guests, a streaming provider for destinations, and webhooks for chat and attendance.</p>
+      <p class="dialog-intro">LiveKit now powers the room, participant roster, media, screen sharing, chat, and reactions.</p>
       <div class="integration-list">
-        <label><span><b>Video room API</b><small>LiveKit, Daily, or Twilio Video</small></span><select id="videoProvider"><option>LiveKit</option><option>Daily</option><option>Twilio Video</option></select></label>
+        <label><span><b>Video room API</b><small>LiveKit WebRTC room</small></span><select id="videoProvider" disabled><option>LiveKit</option></select></label>
         <label><span><b>Broadcast API</b><small>Mux Live or Cloudflare Stream</small></span><select><option>Mux Live</option><option>Cloudflare Stream</option></select></label>
         <label><span><b>Multi-platform output</b><small>RTMP destinations and stream keys</small></span><select><option>Restream</option><option>Custom RTMP</option></select></label>
         <label><span><b>Realtime data</b><small>Presence, chat, reactions, hand raise</small></span><select><option>Supabase Realtime</option><option>Firebase</option></select></label>
       </div>
-      <div class="api-note"><b>Security note</b><span>API secrets must live on a backend—not in this page. The deployed demo uses safe browser-only placeholders.</span></div>
+      <div class="api-note"><b>Server setup</b><span>Add LIVEKIT_URL, LIVEKIT_API_KEY, and LIVEKIT_API_SECRET to the server environment. Secrets are never sent to the browser.</span></div>
       <button class="connect-btn" value="default">Save configuration</button>
     </form>
   </dialog>

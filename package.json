@@ -1,0 +1,21 @@
+{
+  "name": "fambridgelive",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "esbuild src/app.js --bundle --minify --sourcemap --outfile=dist/app.js",
+    "dev": "npm run build && node --watch server.js",
+    "start": "node server.js",
+    "check": "node --check server.js && npm run build"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "livekit-client": "^2.15.6",
+    "livekit-server-sdk": "^2.15.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.11"
+  }
+}
