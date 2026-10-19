@@ -25,6 +25,7 @@ function renderIdentity() { if (identity?.role !== "Host") return; const shortNa
 function applyRoleView() {
   const guest = identity?.role === "Guest link" || location.hash === "#join"
   document.body.classList.toggle("guest-mode", guest)
+  document.documentElement.classList.toggle("guest-mode", guest)
   if (!identity) return
   const shortName = initials(identity.name)
   $("#hostName").textContent = identity.name; $("#hostInitials").textContent = shortName; $("#hostAvatar").textContent = shortName
