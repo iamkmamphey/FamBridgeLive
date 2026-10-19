@@ -1,0 +1,3 @@
+.site-package-stage/
+*.tar.gz
+*.code-workspace
