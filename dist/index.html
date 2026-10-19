@@ -22,7 +22,7 @@
   <header class="topbar">
     <a class="brand" href="#" aria-label="LiveBridge home"><span class="brand-mark">L</span><span>LIVE<span>BRIDGE</span></span></a>
     <div class="event-title"><span class="live-dot"></span><div><small>LIVE EVENT</small><strong id="roomTitle" contenteditable="true">THE MAKERS CONFERENCE</strong></div></div>
-    <div class="top-actions"><span class="status-pill"><i></i> Excellent</span><button class="icon-btn" id="settingsBtn" aria-label="Open integrations">⚙</button><button class="avatar">KB</button></div>
+    <div class="top-actions"><span class="status-pill"><i></i> Excellent</span><button class="icon-btn" id="settingsBtn" aria-label="Open integrations">⚙</button><button class="avatar" id="hostAvatar" aria-label="Host profile">H</button></div>
   </header>
 
   <main class="studio-shell">
@@ -40,8 +40,8 @@
         <div class="section-heading"><div><span class="eyebrow">02 / HOST CAMERA</span><h2>Your preview</h2></div><span id="cameraState" class="tag">Camera off</span></div>
         <div class="host-preview" id="hostPreview">
           <video id="hostVideo" autoplay muted playsinline></video>
-          <div class="camera-placeholder"><div class="placeholder-avatar">KB</div><strong>Ready when you are</strong><span>Turn on camera to preview</span></div>
-          <div class="nameplate"><span>Keisha Brown · Host</span><em>HOST</em></div>
+          <div class="camera-placeholder"><div class="placeholder-avatar" id="hostInitials">H</div><strong>Ready when you are</strong><span>Turn on camera to preview</span></div>
+          <div class="nameplate"><span><b id="hostName">Your name</b> · Host</span><em>HOST</em></div>
         </div>
         <div class="media-controls">
           <button id="cameraBtn" class="round-btn" aria-label="Toggle camera">◉</button>
@@ -80,7 +80,7 @@
     <form id="joinForm" class="dialog-card">
       <div class="dialog-head"><div><span class="eyebrow">JOIN ROOM</span><h2>How should we introduce you?</h2></div></div>
       <p class="dialog-intro">Your name will appear for everyone using this room link.</p>
-      <label class="join-name"><span>Display name</span><input id="joinName" maxlength="50" autocomplete="name" placeholder="Your name" required></label>
+      <label class="join-name"><span id="joinNameLabel">Host display name</span><input id="joinName" maxlength="50" autocomplete="name" placeholder="Your name" required></label>
       <button class="connect-btn" type="submit">Join room</button>
     </form>
   </dialog>

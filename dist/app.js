@@ -4,7 +4,7 @@ const IDENTITY_KEY = "livebridge:identity"
 const PRESENCE_TTL = 15000
 const params = new URLSearchParams(location.search)
 let roomId = params.get("room") || crypto.randomUUID().slice(0, 8)
-let identity = JSON.parse(localStorage.getItem(IDENTITY_KEY) || "null")
+let identity = JSON.parse(sessionStorage.getItem(IDENTITY_KEY) || "null")
 let participants = []
 const messages = [["LiveBridge", "Welcome to the room. Share the invite link to bring guests in automatically.", "#f6c258"]]
 let sourceIndex = 0, recordingTimer, seconds = 0, cameraStream, channel
@@ -15,6 +15,7 @@ function readRoom(id = roomId) { try { const room = JSON.parse(localStorage.getI
 function saveRoom(room) { localStorage.setItem(roomKey(room.id), JSON.stringify(room)); const rooms = JSON.parse(localStorage.getItem(ROOM_INDEX_KEY) || "[]").filter(r => r.id !== room.id); rooms.unshift({ id: room.id, title: room.title, updatedAt: Date.now() }); localStorage.setItem(ROOM_INDEX_KEY, JSON.stringify(rooms.slice(0, 20))); renderRoomPicker() }
 function inviteUrl() { const url = new URL(location.href); url.searchParams.set("room", roomId); url.hash = "join"; return url.toString() }
 function initials(name) { return name.split(/\s+/).map(x => x[0]).join("").slice(0, 2).toUpperCase() || "G" }
+function renderIdentity() { if (identity?.role !== "Host") return; const shortName = initials(identity.name); $("#hostName").textContent = identity.name; $("#hostInitials").textContent = shortName; $("#hostAvatar").textContent = shortName; $("#hostAvatar").setAttribute("aria-label", `${identity.name}, host`) }
 function colorFor(value) { let n = 0; for (const c of value) n = (n * 31 + c.charCodeAt(0)) >>> 0; return `hsl(${n % 360} 28% 40%)` }
 function ensureRoomUrl() { const url = new URL(location.href); url.searchParams.set("room", roomId); history.replaceState({}, "", url) }
 function renderRoomPicker() { const rooms = JSON.parse(localStorage.getItem(ROOM_INDEX_KEY) || "[]"); $("#roomPicker").innerHTML = [{ id: roomId, title: readRoom().title }, ...rooms.filter(r => r.id !== roomId)].map(r => `<option value="${r.id}" ${r.id === roomId ? "selected" : ""}>${r.title} · ${r.id}</option>`).join("") }
@@ -36,7 +37,7 @@ function formatTime(s) { return new Date(s * 1000).toISOString().slice(11, 19) }
 function announce() { if (!identity) return; const room = readRoom(); room.title = $("#roomTitle").textContent.trim() || room.title; room.participants[identity.id] = { ...identity, lastSeen: Date.now(), role: identity.role || "Guest link" }; saveRoom(room); channel?.postMessage({ type: "presence" }); renderParticipants() }
 function openRoom(id) { channel?.close(); roomId = id; ensureRoomUrl(); const room = readRoom(); $("#roomTitle").textContent = room.title; channel = new BroadcastChannel(`livebridge:${roomId}`); channel.onmessage = renderParticipants; announce(); renderRoomPicker(); showToast(`Loaded ${room.title}`) }
 
-$("#joinForm").onsubmit = e => { e.preventDefault(); const name = $("#joinName").value.trim(); identity = { id: identity?.id || crypto.randomUUID(), name, role: location.hash === "#join" ? "Guest link" : "Host" }; localStorage.setItem(IDENTITY_KEY, JSON.stringify(identity)); $("#joinDialog").close(); announce(); showToast(`Joined room as ${name}`) }
+$("#joinForm").onsubmit = e => { e.preventDefault(); const name = $("#joinName").value.trim(); const role = location.hash === "#join" ? "Guest link" : "Host"; identity = { id: identity?.id || crypto.randomUUID(), name, role }; sessionStorage.setItem(IDENTITY_KEY, JSON.stringify(identity)); localStorage.setItem(`${IDENTITY_KEY}:last-name`, name); renderIdentity(); $("#joinDialog").close(); announce(); showToast(role === "Host" ? `Host set to ${name}` : `Joined room as ${name}`) }
 $("#newRoomBtn").onclick = () => { roomId = crypto.randomUUID().slice(0, 8); saveRoom({ id: roomId, title: "Untitled live room", participants: {}, sources: {} }); openRoom(roomId) }
 $("#roomPicker").onchange = e => openRoom(e.target.value)
 $("#roomTitle").addEventListener("blur", announce)
@@ -81,4 +82,5 @@ document.addEventListener("keydown", e => { if ((e.ctrlKey || e.metaKey) && e.ke
 window.addEventListener("storage", e => { if (e.key === roomKey()) renderParticipants() })
 window.addEventListener("beforeunload", announce)
 ensureRoomUrl(); openRoom(roomId); renderMessages(); setInterval(announce, 5000)
-if (!identity || location.hash === "#join") { $("#joinName").value = identity?.name || ""; $("#joinDialog").showModal() } else announce()
+if (identity) renderIdentity()
+if (!identity || location.hash === "#join") { const joiningAsGuest = location.hash === "#join"; $("#joinNameLabel").textContent = joiningAsGuest ? "Guest display name" : "Host display name"; $("#joinName").value = joiningAsGuest ? "" : (identity?.name || localStorage.getItem(`${IDENTITY_KEY}:last-name`) || ""); $("#joinDialog").showModal() } else announce()
