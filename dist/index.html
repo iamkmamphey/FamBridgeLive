@@ -10,22 +10,29 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <style>
+    .room-picker,.join-name{display:grid;gap:7px;margin:14px 0;color:var(--muted);font-size:12px}
+    .room-picker select,.join-name input{width:100%;border:1px solid var(--line);border-radius:10px;background:#10171b;color:var(--ink);padding:11px 12px;font:inherit}
+    .source-heading{margin-top:18px}.empty-room{grid-column:1/-1;min-height:260px;display:grid;place-content:center;gap:8px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:14px}.empty-room strong{color:var(--ink);font:600 18px 'Space Grotesk'}
+  </style>
 </head>
 <body>
   <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
   <header class="topbar">
     <a class="brand" href="#" aria-label="LiveBridge home"><span class="brand-mark">L</span><span>LIVE<span>BRIDGE</span></span></a>
-    <div class="event-title"><span class="live-dot"></span><div><small>LIVE EVENT</small><strong contenteditable="true">THE MAKERS CONFERENCE</strong></div></div>
+    <div class="event-title"><span class="live-dot"></span><div><small>LIVE EVENT</small><strong id="roomTitle" contenteditable="true">THE MAKERS CONFERENCE</strong></div></div>
     <div class="top-actions"><span class="status-pill"><i></i> Excellent</span><button class="icon-btn" id="settingsBtn" aria-label="Open integrations">⚙</button><button class="avatar">KB</button></div>
   </header>
 
   <main class="studio-shell">
     <aside class="control-panel">
       <section class="panel-card sources-card">
-        <div class="section-heading"><div><span class="eyebrow">01 / SOURCES</span><h2>Bring everyone in</h2></div><button id="addSourceBtn" class="mini-btn">+ Add</button></div>
+        <div class="section-heading"><div><span class="eyebrow">01 / ROOM</span><h2>Bring everyone in</h2></div><button id="newRoomBtn" class="mini-btn">+ New</button></div>
+        <label class="room-picker"><span>Existing rooms</span><select id="roomPicker" aria-label="Load an existing room"></select></label>
+        <div class="section-heading source-heading"><div><span class="eyebrow">SOURCES</span></div><button id="addSourceBtn" class="mini-btn">+ Add</button></div>
         <div id="sourceList" class="source-list"></div>
         <button class="connect-btn" id="connectBtn"><span>Connect sources</span><kbd>⌘ ↵</kbd></button>
-        <p class="privacy-note">🔒 Links stay in this browser until you connect.</p>
+        <p class="privacy-note">🔗 Everyone opening this room link joins the same room.</p>
       </section>
 
       <section class="panel-card host-card">
@@ -53,7 +60,7 @@
     <section class="stage-panel">
       <div class="stage-header">
         <div><span class="eyebrow">03 / LIVE ROOM</span><h1>People in your room</h1></div>
-        <div class="room-meta"><button id="copyInviteBtn" class="outline-btn">⌁ Copy invite link</button><span><b id="participantCount">12</b> connected</span></div>
+        <div class="room-meta"><button id="copyInviteBtn" class="outline-btn">⌁ Copy invite link</button><span><b id="participantCount">0</b> connected</span></div>
       </div>
       <div id="participantGrid" class="participant-grid"></div>
       <div class="stage-footer"><span><i></i> All systems operational</span><button id="layoutBtn">▦ Grid</button><button id="muteAllBtn">♩ Mute all</button><button id="inviteBtn">+ Invite guest</button></div>
@@ -68,6 +75,14 @@
   </main>
 
   <div id="toast" class="toast" role="status"></div>
+  <dialog id="joinDialog">
+    <form id="joinForm" class="dialog-card">
+      <div class="dialog-head"><div><span class="eyebrow">JOIN ROOM</span><h2>How should we introduce you?</h2></div></div>
+      <p class="dialog-intro">Your name will appear for everyone using this room link.</p>
+      <label class="join-name"><span>Display name</span><input id="joinName" maxlength="50" autocomplete="name" placeholder="Your name" required></label>
+      <button class="connect-btn" type="submit">Join room</button>
+    </form>
+  </dialog>
   <dialog id="integrationDialog">
     <form method="dialog" class="dialog-card">
       <div class="dialog-head"><div><span class="eyebrow">PRODUCTION SETUP</span><h2>Connections & APIs</h2></div><button class="icon-btn" value="cancel" aria-label="Close">×</button></div>
