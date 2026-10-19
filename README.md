@@ -1,14 +1,15 @@
-# LiveBridge Host Studio
+# Fambridgelive Host Studio
 
 Responsive host dashboard prototype for running a multi-guest live event from one screen.
 
 ## What works in this prototype
 
 - Responsive participant grid with featured-speaker switching
-- Guest/source link inputs and connection-state feedback
+- Reusable saved guest/source links, including WhatsApp, Zoom, Meet, RTMP, and native guest links
 - Real browser camera/microphone preview via `getUserMedia`
-- Screen sharing via `getDisplayMedia`
-- Host controls, mute-all, reactions, chat, invite-link copy, layout switching, and recording timer
+- Screen sharing with a live desktop preview via `getDisplayMedia`
+- Local recording with source, browser-supported format, folder, and filename selection
+- Host controls, mute-all, reactions, shared native-room chat, participant list, invite-link copy, and layout switching
 - Integration configuration map for production video, broadcast, RTMP, and realtime APIs
 
 ## Production API architecture
