@@ -41,8 +41,8 @@ function addSource(preset = sourcePresets[sourceIndex++ % sourcePresets.length])
 sourcePresets.forEach(addSource)
 
 function savedSources() { try { return JSON.parse(localStorage.getItem(SAVED_SOURCES_KEY)) || [] } catch { return [] } }
-function saveSourceForLater(source) { const items = savedSources().filter(item => item.url !== source.url); items.unshift(source); localStorage.setItem(SAVED_SOURCES_KEY, JSON.stringify(items.slice(0, 30))); renderSavedSourcePicker() }
-function renderSavedSourcePicker() { $("#savedSourcePicker").innerHTML = `<option value="">Choose a saved link…</option>` + savedSources().map((source, i) => `<option value="${i}">${source.name} · ${source.role}</option>`).join("") }
+function saveSourceForLater(source) { const items = savedSources().filter(item => item.url !== source.url); items.unshift(source); localStorage.setItem(SAVED_SOURCES_KEY, JSON.stringify(items.slice(0, 30))) }
+function restoreSavedSources() { for (const source of savedSources()) { const row = [...document.querySelectorAll(".source-item")].find(item => item.dataset.sourceType === source.type && !item.querySelector("input").value); if (row) row.querySelector("input").value = source.url } }
 function sourcePreset(type) { return sourcePresets.find(item => item[0] === type) || sourcePresets[0] }
 
 function liveParticipants() {
@@ -74,6 +74,7 @@ function receiveRoomData(payload) {
     const message = JSON.parse(new TextDecoder().decode(payload))
     if (message.type === "chat") { const room = readRoom(); room.messages.push(message); saveRoom(room); renderActivity(); }
     if (message.type === "reaction") showToast(`${message.name} reacted ${message.emoji}`)
+    if (message.type === "room-title" && typeof message.title === "string") { const room = readRoom(); room.title = message.title.slice(0, 80); saveRoom(room); $("#roomTitle").textContent = room.title }
   } catch {}
 }
 
@@ -106,8 +107,7 @@ async function connectLiveRoom() {
 function renderParticipants() {
   const now = Date.now(), room = readRoom()
   const livePeople = liveParticipants() || Object.values(room.participants || {}).filter(p => now - p.lastSeen < PRESENCE_TTL).map(p => ({ ...p, status: "Preview" }))
-  const linkedSources = Object.values(room.sources || {}).map(s => ({ ...s, status: "Linked" }))
-  participants = [...livePeople, ...linkedSources]
+  participants = livePeople
   $("#participantGrid").innerHTML = participants.map((p, i) => `<article class="participant ${i === 0 ? "featured" : ""}" tabindex="0" data-id="${safe(p.id)}"><div class="participant-bg" style="--c1:${colorFor(p.id)};--c2:#202936"><div class="person-face">${safe(initials(p.name))}</div></div><div class="participant-top"><strong>${safe(p.name)}</strong><span class="source-chip">${safe(p.role || "Guest link")}</span></div><div class="participant-bottom"><span>● ${safe(p.status)}</span><span class="mute-indicator">${p.live?.isMicrophoneEnabled ? "♩" : "♩̸"}</span><span class="signal"><i></i><i></i><i></i></span></div></article>`).join("") || `<div class="empty-room"><strong>No one is here yet</strong><span>Copy the invite link to bring guests into this LiveKit room.</span></div>`
   $("#participantCount").textContent = livePeople.length
   document.querySelectorAll(".participant").forEach(card => card.onclick = () => { document.querySelector(".participant.featured")?.classList.remove("featured"); card.classList.add("featured"); showToast(`${participants.find(p => p.id === card.dataset.id)?.name} moved to the main stage`) })
@@ -140,8 +140,10 @@ async function openRoom(id) { channel?.close(); if (liveRoom) await liveRoom.dis
 $("#joinForm").onsubmit = async e => { e.preventDefault(); const name = $("#joinName").value.trim(); const role = location.hash === "#join" ? "Guest link" : "Host"; hostAccessKey = role === "Host" ? $("#hostAccessKey").value : ""; identity = { id: identity?.id || crypto.randomUUID(), name, role }; sessionStorage.setItem(IDENTITY_KEY, JSON.stringify(identity)); localStorage.setItem(`${IDENTITY_KEY}:last-name`, name); applyRoleView(); renderIdentity(); $("#joinDialog").close(); announce(); await connectLiveRoom(); hostAccessKey = ""; $("#hostAccessKey").value = ""; showToast(role === "Host" ? `Host set to ${name}` : `Joined room as ${name}`) }
 $("#newRoomBtn").onclick = () => { roomId = crypto.randomUUID().replaceAll("-", ""); saveRoom({ id: roomId, title: "Untitled live room", participants: {}, sources: {}, messages: [] }); openRoom(roomId) }
 $("#roomPicker").onchange = e => openRoom(e.target.value)
-$("#savedSourcePicker").onchange = e => { const source = savedSources()[Number(e.target.value)]; if (!source) return; addSource(sourcePreset(source.type)); const row = $("#sourceList").lastElementChild; row.querySelector("input").value = source.url; e.target.value = ""; showToast("Saved link loaded") }
-$("#roomTitle").addEventListener("blur", announce)
+$("#saveSourcesBtn").onclick = () => { const rows = [...document.querySelectorAll(".source-item")].filter(row => row.querySelector("input").value.trim()); if (!rows.length) return showToast("Add at least one link to save"); let saved = 0; for (const row of rows) { try { const url = new URL(row.querySelector("input").value.trim()); const type = row.dataset.sourceType || "camera"; const labels = { zoom: "Zoom source", meet: "Google Meet source", whatsapp: "WhatsApp source", rtmp: "RTMP stream", camera: "Guest link" }; saveSourceForLater({ id: `saved-${type}-${url.hostname}-${url.pathname}`, type, name: labels[type], role: url.hostname.replace(/^www\./, ""), url: url.toString() }); saved++ } catch {} } showToast(`${saved} link${saved === 1 ? "" : "s"} saved for next time`) }
+async function saveMeetingTitle() { if (identity?.role !== "Host") return; const room = readRoom(); room.title = $("#roomTitle").textContent.trim().slice(0, 80) || "Untitled live room"; $("#roomTitle").textContent = room.title; saveRoom(room); if (liveRoom?.state === "connected") await liveRoom.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({ type: "room-title", title: room.title })), { reliable: true }); channel?.postMessage({ type: "title" }); renderRoomPicker(); showToast("Meeting name saved") }
+$("#roomTitle").addEventListener("blur", saveMeetingTitle)
+$("#roomTitle").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); e.currentTarget.blur() } })
 $("#addSourceBtn").onclick = () => addSource()
 $("#connectBtn").onclick = () => {
   const rows = [...document.querySelectorAll(".source-item")].filter(row => row.querySelector("input").value.trim())
@@ -157,7 +159,6 @@ $("#connectBtn").onclick = () => {
       const id = `source-${type}-${url.hostname}-${url.pathname}`
       const source = { id, type, name: labels[type], role: url.hostname.replace(/^www\./, ""), url: url.toString() }
       room.sources[id] = source
-      saveSourceForLater(source)
       row.classList.add("connected")
       input.disabled = true
       connected++
@@ -200,10 +201,10 @@ $("#integrationDialog").addEventListener("close", () => { if ($("#integrationDia
 document.addEventListener("keydown", e => { if ((e.ctrlKey || e.metaKey) && e.key === "Enter") $("#connectBtn").click() })
 window.addEventListener("storage", e => { if (e.key === roomKey()) { renderParticipants(); renderActivity() } })
 window.addEventListener("beforeunload", announce)
-function installTooltips() { const labels = { layoutBtn: "Switch between grid and focus layouts", muteAllBtn: "Mute all participants", inviteBtn: "Copy a guest invite link", recordBtn: "Start or stop a local recording" }; document.querySelectorAll("button").forEach(button => { if (!button.title) button.title = labels[button.id] || button.getAttribute("aria-label") || button.textContent.trim() || "Action" }); const reactions = ["Applaud","Send love","Send fire reaction","Laugh","Celebrate","Share an idea"]; document.querySelectorAll("#reactionRow button").forEach((button, i) => { button.title = reactions[i]; button.setAttribute("aria-label", reactions[i]) }) }
+function installTooltips() { const labels = { layoutBtn: "Switch between grid and focus layouts", muteAllBtn: "Mute all participants", inviteBtn: "Copy a guest invite link", recordBtn: "Start or stop a local recording", saveSourcesBtn: "Save every entered source link for next time" }; document.querySelectorAll("button").forEach(button => { if (!button.title) button.title = labels[button.id] || button.getAttribute("aria-label") || button.textContent.trim() || "Action" }); const reactions = ["Like","Applaud","Send love","Send fire reaction","Laugh","Celebrate","Pray","Surprised","Sad","Thinking","One hundred","Share an idea"]; document.querySelectorAll("#reactionRow button").forEach((button, i) => { button.title = reactions[i]; button.setAttribute("aria-label", reactions[i]) }) }
 if (typeof MediaRecorder === "undefined") $("#recordBtn").disabled = true
 else [...$("#recordFormat").options].forEach(option => { option.disabled = !MediaRecorder.isTypeSupported(option.value) })
-renderSavedSourcePicker(); installTooltips(); new MutationObserver(installTooltips).observe(document.body, { childList: true, subtree: true })
+restoreSavedSources(); installTooltips(); new MutationObserver(installTooltips).observe(document.body, { childList: true, subtree: true })
 ensureRoomUrl(); fetch("/api/livekit/status").then(r => r.json()).then(status => { liveKitConfigured = status.configured; $(".status-pill").innerHTML = status.configured ? "<i></i> LiveKit ready" : "<i></i> Setup needed"; openRoom(roomId) }).catch(() => openRoom(roomId)); renderActivity(); setInterval(announce, 5000)
 if (identity) renderIdentity()
 applyRoleView()

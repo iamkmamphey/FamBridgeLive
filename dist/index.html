@@ -19,14 +19,15 @@
     .source-icon.whatsapp{background:#1f6d48}.host-preview video.screen-share{transform:none}.empty-activity{display:grid;place-items:center;min-height:220px;color:var(--muted);text-align:center}.message-form[hidden]{display:none}
     .participant-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}.participant-bg:has(.participant-video) .person-face{display:none}.participant-top,.participant-bottom{z-index:2}
     html.guest-mode .sources-card,html.guest-mode .quick-card,html.guest-mode #settingsBtn,html.guest-mode #copyInviteBtn,html.guest-mode #layoutBtn,html.guest-mode #muteAllBtn,html.guest-mode #inviteBtn,html.guest-mode #shareBtn,html.guest-mode .tabs button[data-tab="queue"],body.guest-mode .sources-card,body.guest-mode .quick-card,body.guest-mode #settingsBtn,body.guest-mode #copyInviteBtn,body.guest-mode #layoutBtn,body.guest-mode #muteAllBtn,body.guest-mode #inviteBtn,body.guest-mode #shareBtn,body.guest-mode .tabs button[data-tab="queue"]{display:none}html.guest-mode #roomTitle,body.guest-mode #roomTitle{pointer-events:none}html.guest-mode .tabs,body.guest-mode .tabs{grid-template-columns:repeat(2,1fr)}html.guest-mode .control-panel,body.guest-mode .control-panel{justify-content:flex-start}
+    .brand-logo-slot:empty{display:none}.brand-logo-slot img{display:block;width:38px;height:38px;object-fit:contain}.icon-btn svg,.round-btn svg,.stage-footer button svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.stage-footer button{display:inline-flex;align-items:center;gap:6px}.save-links-btn{width:100%;margin-top:12px}.reaction-row{flex-wrap:wrap;gap:5px}.reaction-row button{flex:0 0 calc(16.666% - 5px)}#roomTitle[contenteditable="true"]{cursor:text;border-radius:5px;padding:2px 5px;margin-left:-5px}#roomTitle[contenteditable="true"]:hover,#roomTitle[contenteditable="true"]:focus{background:#18211f;box-shadow:0 0 0 1px #34413d}#roomTitle[contenteditable="true"]::after{content:" ✎";color:#7f8b88;font-size:10px}
   </style>
 </head>
 <body>
   <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
   <header class="topbar">
-    <a class="brand" href="#" aria-label="Fambridgelive home"><span class="brand-mark">F</span><span>FAMBRIDGE<span>LIVE</span></span></a>
+    <a class="brand" href="#" aria-label="Fambridgelive home"><span class="brand-logo-slot" aria-hidden="true"></span><span>FAMBRIDGE<span>LIVE</span></span></a>
     <div class="event-title"><span class="live-dot"></span><div><small>LIVE EVENT</small><strong id="roomTitle" contenteditable="true">THE MAKERS CONFERENCE</strong></div></div>
-    <div class="top-actions"><span class="status-pill"><i></i> Excellent</span><button class="icon-btn" id="settingsBtn" aria-label="Open integrations">⚙</button><button class="avatar" id="hostAvatar" aria-label="Host profile">H</button></div>
+    <div class="top-actions"><span class="status-pill"><i></i> Excellent</span><button class="icon-btn" id="settingsBtn" aria-label="Open integrations"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21h-4v-.09A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.2 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H2.4v-4h.09A1.7 1.7 0 0 0 4.2 8.6a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 8.6 4.2a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V2.4h4v.09A1.7 1.7 0 0 0 15 4.2a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.4 8.6a1.7 1.7 0 0 0 .6 1 1.7 1.7 0 0 0 1.1.4h.09v4h-.09a1.7 1.7 0 0 0-1.7 1Z"/></svg></button><button class="avatar" id="hostAvatar" aria-label="Host profile">H</button></div>
   </header>
 
   <main class="studio-shell">
@@ -35,7 +36,7 @@
         <div class="section-heading"><div><span class="eyebrow">01 / ROOM</span><h2>Bring everyone in</h2></div><button id="newRoomBtn" class="mini-btn">+ New</button></div>
         <label class="room-picker"><span>Existing rooms</span><select id="roomPicker" aria-label="Load an existing room"></select></label>
         <div class="section-heading source-heading"><div><span class="eyebrow">SOURCES</span></div><button id="addSourceBtn" class="mini-btn">+ Add</button></div>
-        <label class="room-picker"><span>Saved links</span><select id="savedSourcePicker" aria-label="Reuse a saved source link"><option value="">Choose a saved link…</option></select></label>
+        <button id="saveSourcesBtn" class="outline-btn save-links-btn" type="button">Save all links</button>
         <div id="sourceList" class="source-list"></div>
         <button class="connect-btn" id="connectBtn"><span>Connect sources</span><kbd>⌘ ↵</kbd></button>
         <p class="privacy-note">🔗 Everyone opening this room link joins the same LiveKit room.</p>
@@ -49,17 +50,17 @@
           <div class="nameplate"><span><b id="hostName">Your name</b> · <span id="identityRole">Host</span></span><em id="roleBadge">HOST</em></div>
         </div>
         <div class="media-controls">
-          <button id="cameraBtn" class="round-btn" aria-label="Toggle camera">◉</button>
-          <button id="micBtn" class="round-btn" aria-label="Toggle microphone">♩</button>
-          <button id="shareBtn" class="round-btn" aria-label="Share screen">▣</button>
+          <button id="cameraBtn" class="round-btn" aria-label="Toggle camera"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="m16 10 5-3v10l-5-3z"/></svg></button>
+          <button id="micBtn" class="round-btn" aria-label="Toggle microphone"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/></svg></button>
+          <button id="shareBtn" class="round-btn" aria-label="Share screen"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4M8 10l4-4 4 4M12 6v8"/></svg></button>
           <span></span>
-          <button id="leaveBtn" class="round-btn danger" aria-label="Leave studio">↗</button>
+          <button id="leaveBtn" class="round-btn danger" aria-label="Leave studio"><svg viewBox="0 0 24 24"><path d="M10 17l5-5-5-5M15 12H3M14 4h5a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-5"/></svg></button>
         </div>
       </section>
 
       <section class="panel-card quick-card">
         <button id="recordBtn" class="record-btn" aria-label="Start or stop a local recording"><i></i><span>Start recording</span><time>00:00:00</time></button>
-        <div class="reaction-row" id="reactionRow"><button>👏</button><button>❤️</button><button>🔥</button><button>😂</button><button>🎉</button><button>💡</button></div>
+        <div class="reaction-row" id="reactionRow"><button>👍</button><button>👏</button><button>❤️</button><button>🔥</button><button>😂</button><button>🎉</button><button>🙏</button><button>😮</button><button>😢</button><button>🤔</button><button>💯</button><button>💡</button></div>
       </section>
     </aside>
 
@@ -69,7 +70,7 @@
         <div class="room-meta"><button id="copyInviteBtn" class="outline-btn">⌁ Copy invite link</button><span><b id="participantCount">0</b> connected</span></div>
       </div>
       <div id="participantGrid" class="participant-grid"></div>
-      <div class="stage-footer"><span><i></i> All systems operational</span><button id="layoutBtn">▦ Grid</button><button id="muteAllBtn">♩ Mute all</button><button id="inviteBtn">+ Invite guest</button></div>
+      <div class="stage-footer"><span><i></i> All systems operational</span><button id="layoutBtn"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg> Grid</button><button id="muteAllBtn"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 11.7 5.2M12 18v3M9 21h6M3 3l18 18"/></svg> Mute all</button><button id="inviteBtn"><svg viewBox="0 0 24 24"><path d="M15 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M8.5 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM19 8v6M16 11h6"/></svg> Invite guest</button></div>
     </section>
 
     <aside class="chat-panel">
