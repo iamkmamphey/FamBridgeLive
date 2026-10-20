@@ -1,6 +1,6 @@
 import "dotenv/config"
 import express from "express"
-import { AccessToken } from "livekit-server-sdk"
+import { AccessToken, RoomServiceClient, TokenVerifier } from "livekit-server-sdk"
 
 const app = express()
 const port = Number(process.env.PORT || 4173)
@@ -44,6 +44,25 @@ app.post("/api/livekit/token", async (request, response) => {
   } catch (error) {
     console.error("Unable to create LiveKit token", error)
     return response.status(500).json({ error: "Unable to create a room token." })
+  }
+})
+
+app.post("/api/livekit/moderate", async (request, response) => {
+  try {
+    const bearer = request.get("authorization") || "", rawToken = bearer.startsWith("Bearer ") ? bearer.slice(7) : ""
+    const { room, participant_identity: participantIdentity, action, track_sid: trackSid } = request.body || {}
+    if (!rawToken || !roomPattern.test(room || "") || !roomPattern.test(participantIdentity || "")) return response.status(400).json({ error: "Invalid moderation request." })
+    const claims = await new TokenVerifier(process.env.LIVEKIT_API_KEY, process.env.LIVEKIT_API_SECRET).verify(rawToken)
+    let metadata = {}; try { metadata = JSON.parse(claims.metadata || "{}") } catch {}
+    if (metadata.role !== "host" || claims.video?.room !== room) return response.status(403).json({ error: "Host permission denied." })
+    const service = new RoomServiceClient(process.env.LIVEKIT_URL.replace(/^wss:/, "https:"), process.env.LIVEKIT_API_KEY, process.env.LIVEKIT_API_SECRET)
+    if (action === "remove") await service.removeParticipant(room, participantIdentity)
+    else if ((action === "mute-audio" || action === "mute-video") && trackSid) await service.mutePublishedTrack(room, participantIdentity, trackSid, true)
+    else return response.status(400).json({ error: "Unsupported moderation action." })
+    return response.json({ ok: true })
+  } catch (error) {
+    console.error("LiveKit moderation failed", error)
+    return response.status(500).json({ error: "Moderation failed." })
   }
 })
 

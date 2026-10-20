@@ -33,6 +33,9 @@ The deployment includes same-origin validation, short-lived room-scoped tokens, 
 - Host controls, mute-all, reactions, shared native-room chat, participant list, invite-link copy, and layout switching
 - LiveKit participant video/audio, presence, room chat, reactions, and screen sharing
 - Secure server-side LiveKit token generation
+- Verified-host controls to remove participants or stop their microphone/camera tracks
+- Background blur and custom background images for host and guest cameras
+- Synchronized host whiteboard and in-chat reactions visible to everyone
 
 ## Production API architecture
 

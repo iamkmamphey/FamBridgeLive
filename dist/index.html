@@ -20,6 +20,8 @@
     .participant-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}.participant-bg:has(.participant-video) .person-face{display:none}.participant-top,.participant-bottom{z-index:2}
     html.guest-mode .sources-card,html.guest-mode .quick-card,html.guest-mode #settingsBtn,html.guest-mode #copyInviteBtn,html.guest-mode #layoutBtn,html.guest-mode #muteAllBtn,html.guest-mode #inviteBtn,html.guest-mode #shareBtn,html.guest-mode .tabs button[data-tab="queue"],body.guest-mode .sources-card,body.guest-mode .quick-card,body.guest-mode #settingsBtn,body.guest-mode #copyInviteBtn,body.guest-mode #layoutBtn,body.guest-mode #muteAllBtn,body.guest-mode #inviteBtn,body.guest-mode #shareBtn,body.guest-mode .tabs button[data-tab="queue"]{display:none}html.guest-mode #roomTitle,body.guest-mode #roomTitle{pointer-events:none}html.guest-mode .tabs,body.guest-mode .tabs{grid-template-columns:repeat(2,1fr)}html.guest-mode .control-panel,body.guest-mode .control-panel{justify-content:flex-start}
     .brand-logo-slot:empty{display:none}.brand-logo-slot img{display:block;width:38px;height:38px;object-fit:contain}.icon-btn svg,.round-btn svg,.stage-footer button svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.stage-footer button{display:inline-flex;align-items:center;gap:6px}.save-links-btn{width:100%;margin-top:12px}.reaction-row{flex-wrap:wrap;gap:5px}.reaction-row button{flex:0 0 calc(16.666% - 5px)}#roomTitle[contenteditable="true"]{cursor:text;border-radius:5px;padding:2px 5px;margin-left:-5px}#roomTitle[contenteditable="true"]:hover,#roomTitle[contenteditable="true"]:focus{background:#18211f;box-shadow:0 0 0 1px #34413d}#roomTitle[contenteditable="true"]::after{content:" ✎";color:#7f8b88;font-size:10px}
+    .background-controls{display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px;margin-top:10px;color:var(--muted);font-size:10px}.background-controls select{background:#0e1213;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px}.chat-reactions{display:flex;gap:4px;margin-top:8px}.chat-reactions button{flex:1;border:1px solid var(--line);background:#101516;border-radius:7px;padding:5px 2px;cursor:pointer}.reaction-message p{font-size:28px!important;line-height:1!important}.whiteboard-card{width:min(92vw,1050px)}.whiteboard-card canvas{width:100%;aspect-ratio:5/3;background:white;border-radius:10px;touch-action:none;display:block}.whiteboard-tools{display:flex;gap:8px;justify-content:flex-end;margin:10px 0}.moderation-actions{position:absolute;right:8px;bottom:25px;z-index:3;display:flex;gap:4px}.moderation-actions button{border:1px solid rgba(255,255,255,.25);background:rgba(5,8,8,.78);color:white;border-radius:6px;padding:4px 6px;font-size:8px;cursor:pointer}.moderation-actions .remove{color:#ff8580}
+    html.guest-mode #whiteboardBtn,body.guest-mode #whiteboardBtn{display:none}
   </style>
 </head>
 <body>
@@ -56,6 +58,7 @@
           <span></span>
           <button id="leaveBtn" class="round-btn danger" aria-label="Leave studio"><svg viewBox="0 0 24 24"><path d="M10 17l5-5-5-5M15 12H3M14 4h5a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-5"/></svg></button>
         </div>
+        <div class="background-controls"><label for="backgroundMode">Camera background</label><select id="backgroundMode"><option value="none">None</option><option value="blur">Blur</option><option value="image">Choose image…</option></select><input id="backgroundImage" type="file" accept="image/png,image/jpeg,image/webp" hidden></div>
       </section>
 
       <section class="panel-card quick-card">
@@ -77,6 +80,7 @@
       <div class="chat-head"><div><span class="eyebrow">LIVE ACTIVITY</span><h2>Room pulse</h2></div><span id="messageCount" class="count">5</span></div>
       <div class="tabs"><button class="active" data-tab="chat">Chat</button><button data-tab="people">People</button><button data-tab="queue">Queue <i>2</i></button></div>
       <div class="messages" id="messages"></div>
+      <div class="chat-reactions" id="chatReactions"><button>👍</button><button>👏</button><button>❤️</button><button>😂</button><button>🎉</button><button>🙏</button></div>
       <form id="messageForm" class="message-form"><input id="messageInput" aria-label="Message" maxlength="180" placeholder="Message everyone…"><button aria-label="Send message">↑</button></form>
     </aside>
   </main>
@@ -115,6 +119,9 @@
       </div>
       <button class="connect-btn" type="submit">Choose location & start</button>
     </form>
+  </dialog>
+  <dialog id="whiteboardDialog">
+    <div class="dialog-card whiteboard-card"><div class="dialog-head"><div><span class="eyebrow">SHARED WHITEBOARD</span><h2>Room whiteboard</h2></div><button class="icon-btn" id="closeWhiteboard" aria-label="Close whiteboard">×</button></div><div class="whiteboard-tools"><input id="penColor" type="color" value="#17211d" aria-label="Pen color"><button id="clearWhiteboard" class="outline-btn">Clear board</button></div><canvas id="whiteboard" width="1000" height="600"></canvas></div>
   </dialog>
   <script src="app.js"></script>
 </body>

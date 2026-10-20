@@ -1,4 +1,4 @@
-import { AccessToken } from "livekit-server-sdk"
+import { AccessToken, TokenVerifier } from "livekit-server-sdk"
 
 const roomPattern = /^[a-zA-Z0-9_-]{3,64}$/
 
@@ -27,4 +27,14 @@ export async function createParticipantToken(payload) {
   })
   token.addGrant({ roomJoin: true, room: roomName, canPublish: true, canSubscribe: true, canPublishData: true })
   return { server_url: process.env.LIVEKIT_URL, participant_token: await token.toJwt(), role: isHost ? "host" : "guest" }
+}
+
+export async function verifiedHost(request, roomName) {
+  const bearer = request.headers.get("authorization") || ""
+  const rawToken = bearer.startsWith("Bearer ") ? bearer.slice(7) : ""
+  if (!rawToken) throw Object.assign(new Error("Host authorization required."), { statusCode: 401 })
+  const claims = await new TokenVerifier(process.env.LIVEKIT_API_KEY, process.env.LIVEKIT_API_SECRET).verify(rawToken)
+  let metadata = {}; try { metadata = JSON.parse(claims.metadata || "{}") } catch {}
+  if (metadata.role !== "host" || claims.video?.room !== roomName) throw Object.assign(new Error("Host permission denied."), { statusCode: 403 })
+  return claims
 }

@@ -1,4 +1,5 @@
 import { Room, RoomEvent, Track } from "livekit-client"
+import { BackgroundProcessor, supportsBackgroundProcessors } from "@livekit/track-processors"
 
 const $ = s => document.querySelector(s)
 const ROOM_INDEX_KEY = "livebridge:rooms"
@@ -10,7 +11,7 @@ let roomId = params.get("room") || crypto.randomUUID().replaceAll("-", "")
 let identity = JSON.parse(sessionStorage.getItem(IDENTITY_KEY) || "null")
 let participants = []
 let sourceIndex = 0, recordingTimer, seconds = 0, cameraStream, screenStream, recordingStream, mediaRecorder, saveHandle, channel, activeTab = "chat"
-let liveRoom, liveKitConfigured = false, connectingToLiveKit = false
+let liveRoom, liveToken = "", liveKitConfigured = false, connectingToLiveKit = false, backgroundProcessor
 let hostAccessKey = ""
 let recordedChunks = []
 const sourcePresets = [["camera","CAM","Paste guest invitation link…"],["zoom","Z","Paste Zoom meeting link…"],["meet","M","Paste Google Meet link…"],["whatsapp","WA","Paste WhatsApp call link…"],["rtmp","↗","Paste RTMP or livestream URL…"]]
@@ -32,6 +33,8 @@ function applyRoleView() {
   $("#identityRole").textContent = guest ? "Guest" : "Host"; $("#roleBadge").textContent = guest ? "GUEST" : "HOST"
   $("#cameraEyebrow").textContent = guest ? "YOUR CAMERA" : "02 / HOST CAMERA"
   $("#roomTitle").contentEditable = guest ? "false" : "true"
+  if ($("#clearWhiteboard")) $("#clearWhiteboard").hidden = guest
+  if ($("#penColor")) $("#penColor").hidden = guest
   if (guest && activeTab === "queue") { activeTab = "chat"; document.querySelector('[data-tab="chat"]')?.classList.add("active") }
 }
 function colorFor(value) { let n = 0; for (const c of value) n = (n * 31 + c.charCodeAt(0)) >>> 0; return `hsl(${n % 360} 28% 40%)` }
@@ -50,7 +53,8 @@ function liveParticipants() {
   const people = [liveRoom.localParticipant, ...liveRoom.remoteParticipants.values()]
   return people.map(person => {
     let metadata = {}; try { metadata = JSON.parse(person.metadata || "{}") } catch {}
-    return { id: person.identity, name: person.name || person.identity, role: metadata.role === "host" ? "Host" : "Guest", status: "Live", live: person }
+    const publications = [...person.trackPublications.values()]
+    return { id: person.identity, name: person.name || person.identity, role: metadata.role === "host" ? "Host" : "Guest", status: "Live", live: person, audioTrackSid: publications.find(p => p.source === Track.Source.Microphone)?.trackSid, videoTrackSid: publications.find(p => p.source === Track.Source.Camera)?.trackSid }
   })
 }
 
@@ -74,7 +78,9 @@ function receiveRoomData(payload) {
     const message = JSON.parse(new TextDecoder().decode(payload))
     if (message.type === "chat") { const room = readRoom(); room.messages.push(message); saveRoom(room); renderActivity(); }
     if (message.type === "reaction") showToast(`${message.name} reacted ${message.emoji}`)
+    if (message.type === "reaction") { const room = readRoom(); room.messages.push({ ...message, text: message.emoji, reaction: true, createdAt: message.createdAt || Date.now() }); saveRoom(room); renderActivity() }
     if (message.type === "room-title" && typeof message.title === "string") { const room = readRoom(); room.title = message.title.slice(0, 80); saveRoom(room); $("#roomTitle").textContent = room.title }
+    if (message.type === "whiteboard") applyWhiteboardEvent(message)
   } catch {}
 }
 
@@ -86,6 +92,7 @@ async function connectLiveRoom() {
     const response = await fetch("/api/livekit/token", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ room_name: roomId, participant_name: identity.name, participant_identity: identity.id.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 64), role: identity.role === "Host" ? "host" : "guest", host_access_key: identity.role === "Host" ? hostAccessKey : undefined }) })
     const credentials = await response.json()
     if (!response.ok) throw new Error(credentials.error || "Could not join LiveKit")
+    liveToken = credentials.participant_token
     liveRoom = new Room({ adaptiveStream: true, dynacast: true })
     const refresh = () => { renderParticipants(); renderActivity(); requestAnimationFrame(attachParticipantTracks) }
     liveRoom.on(RoomEvent.ParticipantConnected, refresh)
@@ -108,9 +115,10 @@ function renderParticipants() {
   const now = Date.now(), room = readRoom()
   const livePeople = liveParticipants() || Object.values(room.participants || {}).filter(p => now - p.lastSeen < PRESENCE_TTL).map(p => ({ ...p, status: "Preview" }))
   participants = livePeople
-  $("#participantGrid").innerHTML = participants.map((p, i) => `<article class="participant ${i === 0 ? "featured" : ""}" tabindex="0" data-id="${safe(p.id)}"><div class="participant-bg" style="--c1:${colorFor(p.id)};--c2:#202936"><div class="person-face">${safe(initials(p.name))}</div></div><div class="participant-top"><strong>${safe(p.name)}</strong><span class="source-chip">${safe(p.role || "Guest link")}</span></div><div class="participant-bottom"><span>● ${safe(p.status)}</span><span class="mute-indicator">${p.live?.isMicrophoneEnabled ? "♩" : "♩̸"}</span><span class="signal"><i></i><i></i><i></i></span></div></article>`).join("") || `<div class="empty-room"><strong>No one is here yet</strong><span>Copy the invite link to bring guests into this LiveKit room.</span></div>`
+  $("#participantGrid").innerHTML = participants.map((p, i) => `<article class="participant ${i === 0 ? "featured" : ""}" tabindex="0" data-id="${safe(p.id)}"><div class="participant-bg" style="--c1:${colorFor(p.id)};--c2:#202936"><div class="person-face">${safe(initials(p.name))}</div></div><div class="participant-top"><strong>${safe(p.name)}</strong><span class="source-chip">${safe(p.role || "Guest link")}</span></div>${identity?.role === "Host" && p.id !== identity.id ? `<div class="moderation-actions"><button data-action="mute-audio" title="Mute microphone">Mic off</button><button data-action="mute-video" title="Stop camera">Camera off</button><button class="remove" data-action="remove" title="Remove from room">Remove</button></div>` : ""}<div class="participant-bottom"><span>● ${safe(p.status)}</span><span class="mute-indicator">${p.live?.isMicrophoneEnabled ? "♩" : "♩̸"}</span><span class="signal"><i></i><i></i><i></i></span></div></article>`).join("") || `<div class="empty-room"><strong>No one is here yet</strong><span>Copy the invite link to bring guests into this LiveKit room.</span></div>`
   $("#participantCount").textContent = livePeople.length
   document.querySelectorAll(".participant").forEach(card => card.onclick = () => { document.querySelector(".participant.featured")?.classList.remove("featured"); card.classList.add("featured"); showToast(`${participants.find(p => p.id === card.dataset.id)?.name} moved to the main stage`) })
+  document.querySelectorAll(".moderation-actions button").forEach(button => button.onclick = async event => { event.stopPropagation(); const card = button.closest(".participant"), person = participants.find(p => p.id === card.dataset.id), action = button.dataset.action, trackSid = action === "mute-audio" ? person.audioTrackSid : person.videoTrackSid; if (action !== "remove" && !trackSid) return showToast(`No active ${action === "mute-audio" ? "microphone" : "camera"} track`); try { const response = await fetch("/api/livekit/moderate", { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${liveToken}` }, body: JSON.stringify({ room: roomId, participant_identity: person.id, action, track_sid: trackSid }) }); const result = await response.json(); if (!response.ok) throw new Error(result.error); showToast(action === "remove" ? `${person.name} removed` : `${person.name}'s ${action === "mute-audio" ? "microphone" : "camera"} stopped`) } catch (error) { showToast(error.message || "Moderation failed") } })
   requestAnimationFrame(attachParticipantTracks)
   if (activeTab === "people") renderActivity()
 }
@@ -119,7 +127,7 @@ function renderActivity() {
   const form = $("#messageForm")
   if (activeTab === "chat") {
     const messages = room.messages.length ? room.messages : [{ id: "welcome", name: "Fambridgelive", text: "Welcome to the room. Comments from native room participants appear here.", color: "#f6c258", createdAt: Date.now() }]
-    $("#messages").innerHTML = messages.map(m => `<div class="message ${m.id === identity?.id ? "host" : ""}"><span class="message-avatar" style="--avatar:${m.color || colorFor(m.id)}">${safe(initials(m.name).slice(0,1))}</span><div><div class="message-head"><b>${safe(m.name)}</b><time>${new Date(m.createdAt).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</time></div><p>${safe(m.text)}</p></div></div>`).join("")
+    $("#messages").innerHTML = messages.map(m => `<div class="message ${m.id === identity?.id ? "host" : ""} ${m.reaction ? "reaction-message" : ""}"><span class="message-avatar" style="--avatar:${m.color || colorFor(m.id)}">${safe(initials(m.name).slice(0,1))}</span><div><div class="message-head"><b>${safe(m.name)}</b><time>${new Date(m.createdAt).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</time></div><p>${safe(m.text)}</p></div></div>`).join("")
     $("#messageCount").textContent = room.messages.length
     form.hidden = false
   } else if (activeTab === "people") {
@@ -173,6 +181,9 @@ $("#copyInviteBtn").onclick = $("#inviteBtn").onclick = async () => { const url 
 $("#cameraBtn").onclick = async () => { try { if (liveRoom?.state === "connected") { const enabled = !liveRoom.localParticipant.isCameraEnabled; await liveRoom.localParticipant.setCameraEnabled(enabled); $("#cameraState").textContent = enabled ? "Camera live" : "Camera off"; $("#cameraBtn").classList.toggle("active", enabled); renderParticipants(); return } if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; $("#hostVideo").style.display = "none"; $(".camera-placeholder").style.display = "flex"; $("#cameraState").textContent = "Camera off"; $("#cameraBtn").classList.remove("active") } else { cameraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true }); $("#hostVideo").srcObject = cameraStream; $("#hostVideo").style.display = "block"; $(".camera-placeholder").style.display = "none"; $("#cameraState").textContent = "Camera preview"; $("#cameraBtn").classList.add("active") } } catch { showToast("Camera permission was not granted") } }
 $("#micBtn").onclick = async e => { try { const enabled = !e.currentTarget.classList.contains("active"); if (liveRoom?.state === "connected") await liveRoom.localParticipant.setMicrophoneEnabled(enabled); else cameraStream?.getAudioTracks().forEach(t => t.enabled = enabled); e.currentTarget.classList.toggle("active", enabled); renderParticipants(); showToast(enabled ? "Microphone on" : "Microphone muted") } catch { showToast("Microphone permission was not granted") } }
 $("#shareBtn").onclick = async e => { try { if (liveRoom?.state === "connected") { const enabled = !liveRoom.localParticipant.isScreenShareEnabled; await liveRoom.localParticipant.setScreenShareEnabled(enabled, { audio: true }); e.currentTarget.classList.toggle("active", enabled); $("#cameraState").textContent = enabled ? "Sharing screen" : (liveRoom.localParticipant.isCameraEnabled ? "Camera live" : "Camera off"); renderParticipants(); showToast(enabled ? "Your desktop is shared with the room" : "Screen sharing ended"); return } if (screenStream) { screenStream.getTracks().forEach(t => t.stop()); return } screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true }); $("#hostVideo").srcObject = screenStream; $("#hostVideo").classList.add("screen-share"); $("#hostVideo").style.display = "block"; $(".camera-placeholder").style.display = "none"; $("#cameraState").textContent = "Sharing preview"; e.currentTarget.classList.add("active"); screenStream.getVideoTracks()[0].onended = () => { screenStream = null; e.currentTarget.classList.remove("active"); $("#hostVideo").style.display = "none"; $(".camera-placeholder").style.display = "flex" }; } catch { showToast("Screen sharing cancelled") } }
+async function setBackground(mode, imagePath) { try { if (!liveRoom?.localParticipant.isCameraEnabled) return showToast("Turn on your camera first"); if (!supportsBackgroundProcessors()) return showToast("Background effects are not supported in this browser"); const publication = liveRoom.localParticipant.getTrackPublication(Track.Source.Camera), videoTrack = publication?.videoTrack; if (!videoTrack) return showToast("Camera track is not ready"); if (mode === "none") { await videoTrack.stopProcessor(); backgroundProcessor = null; return showToast("Camera background removed") } if (backgroundProcessor) await videoTrack.stopProcessor(); backgroundProcessor = BackgroundProcessor(mode === "blur" ? { mode: "background-blur", blurRadius: 12 } : { mode: "virtual-background", imagePath }); await videoTrack.setProcessor(backgroundProcessor); showToast(mode === "blur" ? "Background blurred" : "Background image applied") } catch (error) { console.error(error); showToast("Background effect could not be applied") } }
+$("#backgroundMode").onchange = e => { if (e.target.value === "image") $("#backgroundImage").click(); else setBackground(e.target.value) }
+$("#backgroundImage").onchange = e => { const file = e.target.files[0]; if (!file) return; setBackground("image", URL.createObjectURL(file)) }
 $("#leaveBtn").onclick = async () => { await liveRoom?.disconnect(); cameraStream?.getTracks().forEach(t => t.stop()); const room = readRoom(); if (identity) delete room.participants[identity.id]; saveRoom(room); channel?.postMessage({ type: "presence" }); location.hash = "join"; $("#joinDialog").showModal() }
 $("#recordBtn").onclick = () => { if (mediaRecorder?.state === "recording") { mediaRecorder.stop(); return } $("#recordDialog").showModal() }
 $("#closeRecordDialog").onclick = () => $("#recordDialog").close()
@@ -191,11 +202,27 @@ $("#recordForm").onsubmit = async e => {
     mediaRecorder.start(1000); seconds = 0; const b = $("#recordBtn"); b.classList.add("recording"); b.querySelector("span").textContent = "Stop & save"; b.querySelector("time").textContent = "00:00:00"; recordingTimer = setInterval(() => b.querySelector("time").textContent = formatTime(++seconds), 1000); $("#recordDialog").close(); showToast("Recording started")
   } catch (error) { if (error?.name !== "AbortError") showToast("Recording could not start") }
 }
-$("#reactionRow").onclick = async e => { if (e.target.tagName !== "BUTTON") return; if (liveRoom?.state === "connected") await liveRoom.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({ type: "reaction", emoji: e.target.textContent, name: identity.name })), { reliable: true }); showToast(`${e.target.textContent} reaction sent to everyone`) }
-$("#muteAllBtn").onclick = () => { document.querySelectorAll(".participant").forEach(p => p.classList.add("muted")); showToast("All participant microphones muted") }
+async function sendReaction(emoji) { const message = { type: "reaction", id: identity.id, emoji, text: emoji, reaction: true, name: identity.name, createdAt: Date.now() }; const room = readRoom(); room.messages.push(message); saveRoom(room); renderActivity(); if (liveRoom?.state === "connected") await liveRoom.localParticipant.publishData(new TextEncoder().encode(JSON.stringify(message)), { reliable: true }); showToast(`${emoji} reaction sent to everyone`) }
+$("#reactionRow").onclick = e => { if (e.target.tagName === "BUTTON") sendReaction(e.target.textContent) }
+$("#chatReactions").onclick = e => { if (e.target.tagName === "BUTTON") sendReaction(e.target.textContent) }
+$("#muteAllBtn").onclick = async () => { const buttons = [...document.querySelectorAll('[data-action="mute-audio"]')]; if (!buttons.length) return showToast("No guest microphones are active"); buttons.forEach(button => button.click()); showToast("All guest microphones muted") }
 $("#layoutBtn").onclick = e => { const g = $("#participantGrid"); g.classList.toggle("compact"); e.currentTarget.textContent = g.classList.contains("compact") ? "▦ Focus" : "▦ Grid"; document.querySelectorAll(".participant").forEach(p => p.classList.remove("featured")); showToast("Room layout changed") }
 $("#messageForm").onsubmit = async e => { e.preventDefault(); const input = $("#messageInput"); if (!input.value.trim() || !identity) return; const message = { type: "chat", id: identity.id, name: identity.name, text: input.value.trim(), color: colorFor(identity.id), createdAt: Date.now() }; const room = readRoom(); room.messages.push(message); saveRoom(room); if (liveRoom?.state === "connected") await liveRoom.localParticipant.publishData(new TextEncoder().encode(JSON.stringify(message)), { reliable: true }); input.value = ""; channel?.postMessage({ type: "message" }); renderActivity(); $("#messages").scrollTop = $("#messages").scrollHeight }
 document.querySelectorAll(".tabs button").forEach(t => t.onclick = () => { document.querySelectorAll(".tabs button").forEach(x => x.classList.remove("active")); t.classList.add("active"); activeTab = t.dataset.tab; renderActivity() })
+const whiteboardButton = document.createElement("button"); whiteboardButton.id = "whiteboardBtn"; whiteboardButton.textContent = "✎ Whiteboard"; $("#layoutBtn").before(whiteboardButton)
+const whiteboard = $("#whiteboard"), boardContext = whiteboard.getContext("2d")
+function drawBoardLine(event) { boardContext.strokeStyle = event.color || "#17211d"; boardContext.lineWidth = 4; boardContext.lineCap = "round"; boardContext.beginPath(); boardContext.moveTo(event.from[0] * whiteboard.width, event.from[1] * whiteboard.height); boardContext.lineTo(event.to[0] * whiteboard.width, event.to[1] * whiteboard.height); boardContext.stroke() }
+function applyWhiteboardEvent(event) { if (event.action === "open") $("#whiteboardDialog").showModal(); else if (event.action === "clear") boardContext.clearRect(0, 0, whiteboard.width, whiteboard.height); else if (event.action === "draw") drawBoardLine(event) }
+async function sendBoardEvent(message) { applyWhiteboardEvent(message); if (liveRoom?.state === "connected") await liveRoom.localParticipant.publishData(new TextEncoder().encode(JSON.stringify(message)), { reliable: true }) }
+whiteboardButton.onclick = () => { if (identity?.role === "Host") sendBoardEvent({ type: "whiteboard", action: "open" }) }
+$("#closeWhiteboard").onclick = () => $("#whiteboardDialog").close()
+$("#clearWhiteboard").onclick = () => { if (identity?.role === "Host") sendBoardEvent({ type: "whiteboard", action: "clear" }) }
+let drawing = false, previousPoint
+function boardPoint(event) { const box = whiteboard.getBoundingClientRect(); return [(event.clientX - box.left) / box.width, (event.clientY - box.top) / box.height] }
+whiteboard.onpointerdown = event => { if (identity?.role !== "Host") return; drawing = true; previousPoint = boardPoint(event); whiteboard.setPointerCapture(event.pointerId) }
+whiteboard.onpointermove = event => { if (!drawing || identity?.role !== "Host") return; const point = boardPoint(event), message = { type: "whiteboard", action: "draw", from: previousPoint, to: point, color: $("#penColor").value }; previousPoint = point; sendBoardEvent(message) }
+whiteboard.onpointerup = whiteboard.onpointercancel = () => { drawing = false }
+if (identity?.role !== "Host") { $("#clearWhiteboard").hidden = true; $("#penColor").hidden = true }
 $("#settingsBtn").onclick = () => $("#integrationDialog").showModal()
 $("#integrationDialog").addEventListener("close", () => { if ($("#integrationDialog").returnValue === "default") showToast("Integration preferences saved for this demo") })
 document.addEventListener("keydown", e => { if ((e.ctrlKey || e.metaKey) && e.key === "Enter") $("#connectBtn").click() })
