@@ -1,6 +1,7 @@
 import { AccessToken, TokenVerifier } from "livekit-server-sdk"
 
 const roomPattern = /^[a-zA-Z0-9_-]{3,64}$/
+export const missingLiveKitVariables = () => ["LIVEKIT_URL", "LIVEKIT_API_KEY", "LIVEKIT_API_SECRET"].filter(name => !process.env[name])
 
 export function json(statusCode, body, extraHeaders = {}) {
   return { statusCode, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", ...extraHeaders }, body: JSON.stringify(body) }
@@ -14,7 +15,8 @@ export function allowedOrigin(event) {
 
 export async function createParticipantToken(payload) {
   const { room_name: roomName, participant_name: participantName, participant_identity: participantIdentity } = payload || {}
-  if (!process.env.LIVEKIT_URL || !process.env.LIVEKIT_API_KEY || !process.env.LIVEKIT_API_SECRET) throw Object.assign(new Error("LiveKit is not configured."), { statusCode: 503 })
+  const missing = missingLiveKitVariables()
+  if (missing.length) throw Object.assign(new Error(`LiveKit is not configured for this function. Missing: ${missing.join(", ")}.`), { statusCode: 503 })
   if (!roomPattern.test(roomName || "") || typeof participantName !== "string" || !participantName.trim() || participantName.length > 50 || !roomPattern.test(participantIdentity || "")) throw Object.assign(new Error("Invalid room or participant details."), { statusCode: 400 })
 
   const requestedHost = payload.role === "host"
