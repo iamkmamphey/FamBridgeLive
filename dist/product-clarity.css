@@ -292,3 +292,5 @@ body .guest-people { display:grid; grid-template-columns:repeat(auto-fit,minmax(
 :root[data-theme="light"] .guest-person-tile.host-tile { border-color:#d19b22; }
 :root[data-theme="light"] .guest-person-tile b { color:#123d61; }
 :root[data-theme="light"] .guest-person-tile small { color:#48677e; }
+.host-audio-btn { position:absolute; right:12px; bottom:12px; z-index:3; padding:8px 11px; border:1px solid #d8ad35; border-radius:999px; background:rgba(10,14,14,.86); color:#f3dc8b; font-size:9px; font-weight:800; cursor:pointer; }
+.host-video-card:has(video[src]) .guest-empty { display:none; }
