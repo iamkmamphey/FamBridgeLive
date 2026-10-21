@@ -184,3 +184,21 @@ button:focus-visible { outline-color:#d8ad35; }
 .placeholder-avatar { color:#d8ad35; }
 .message.host p { border-left-color:#d8ad35; }
 .ambient-one { background:#d8ad35; }
+.background-audio-deck { margin-top:18px; padding:15px; border:1px solid #4b4329; border-radius:14px; background:linear-gradient(145deg,#171710,#222013); }
+.deck-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+.deck-heading h3 { margin:4px 0 0; color:#fff; font:600 14px 'Space Grotesk'; }
+.background-file { display:flex; align-items:center; justify-content:center; min-height:48px; margin-top:12px; border:1px dashed #8c7431; border-radius:9px; color:#e5c45e; font-size:10px; font-weight:700; cursor:pointer; }
+.background-file input { display:none; }
+.background-controls { display:grid; grid-template-columns:auto auto 1fr auto; gap:9px; align-items:center; margin-top:11px; }
+.volume-control { display:grid; gap:5px; color:#c8c4b8; font-size:9px; }
+.volume-control span { display:flex; justify-content:space-between; gap:12px; }
+.volume-control b { color:#e5c45e; }
+.volume-control input { accent-color:#d8ad35; }
+.voice-priority { display:flex; align-items:center; gap:6px; color:#ddd8c9; font-size:9px; white-space:nowrap; }
+.voice-priority input { accent-color:#d8ad35; }
+.deck-note { margin:9px 0 0; color:#8f8b7d; font-size:9px; }
+.background-audio-notice { position:fixed; right:20px; bottom:20px; z-index:15; padding:9px 12px; border:1px solid #8c7431; border-radius:999px; background:rgba(14,16,16,.9); color:#f3dc8b; font-size:10px; box-shadow:var(--shadow); }
+:root[data-theme="light"] .background-audio-deck { border-color:#d9bd6c; background:linear-gradient(145deg,#fffaf0,#f8efd9); }
+:root[data-theme="light"] .deck-heading h3 { color:#143d5e; }
+:root[data-theme="light"] .volume-control,:root[data-theme="light"] .voice-priority { color:#36566e; }
+@media(max-width:650px){.background-controls{grid-template-columns:1fr 1fr}.volume-control{grid-column:1/-1}.voice-priority{grid-column:1/-1}}
