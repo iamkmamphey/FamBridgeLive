@@ -201,6 +201,7 @@ button:focus-visible { outline-color:#d8ad35; }
 .control-panel .background-audio-deck { margin-top:0; }
 .control-panel .background-controls { grid-template-columns:1fr 1fr; }
 .control-panel .volume-control,.control-panel .voice-priority { grid-column:1/-1; }
+.background-controls .active-loop { color:#17130a; background:#d8ad35; border-color:#d8ad35; font-weight:800; }
 .play-room-btn { margin-top:12px; }
 :root[data-theme="light"] .background-audio-deck { border-color:#d9bd6c; background:linear-gradient(145deg,#fffaf0,#f8efd9); }
 :root[data-theme="light"] .deck-heading h3 { color:#143d5e; }
