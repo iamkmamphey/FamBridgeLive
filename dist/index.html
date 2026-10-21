@@ -4,59 +4,68 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#0b0f12">
-  <meta name="description" content="LiveBridge unified live-event host control room">
-  <title>LiveBridge — Host Studio</title>
+  <meta name="description" content="Fambridgelive unified live-event host control room">
+  <link rel="icon" href="assets/famyank-logo.png" type="image/png">
+  <title>Fambridgelive — Host Studio</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="product-clarity.css">
 </head>
 <body>
   <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
   <header class="topbar">
-    <a class="brand" href="#" aria-label="LiveBridge home"><span class="brand-mark">L</span><span>LIVE<span>BRIDGE</span></span></a>
+    <a class="brand" href="#" aria-label="Fambridge Live by Famyank"><img src="assets/famyank-logo.png" alt="Famyank — The Family Movement"><span class="brand-wordmark">FAMBRIDGE<em>LIVE</em></span></a>
     <div class="event-title"><span class="live-dot"></span><div><small>LIVE EVENT</small><strong contenteditable="true">THE MAKERS CONFERENCE</strong></div></div>
-    <div class="top-actions"><span class="status-pill"><i></i> Excellent</span><button class="icon-btn" id="settingsBtn" aria-label="Open integrations">⚙</button><button class="avatar">KB</button></div>
+    <div class="top-actions"><span class="status-pill"><i></i> Excellent</span><button class="theme-toggle" id="themeToggle" aria-label="Switch to light theme"><span class="theme-icon">☀</span><span class="theme-label">Light</span></button><button class="icon-btn" id="settingsBtn" aria-label="Open integrations">⚙</button><button class="avatar" id="hostAvatar">KB</button></div>
   </header>
 
   <main class="studio-shell">
     <aside class="control-panel">
       <section class="panel-card sources-card">
-        <div class="section-heading"><div><span class="eyebrow">01 / SOURCES</span><h2>Bring everyone in</h2></div><button id="addSourceBtn" class="mini-btn">+ Add</button></div>
+        <div class="section-heading"><div><span class="eyebrow">01 / CONNECTED PLATFORMS</span><h2>Load existing rooms</h2></div><button id="addSourceBtn" class="mini-btn">+ Add</button></div>
         <div id="sourceList" class="source-list"></div>
         <button class="connect-btn" id="connectBtn"><span>Connect sources</span><kbd>⌘ ↵</kbd></button>
-        <p class="privacy-note">🔒 Links stay in this browser until you connect.</p>
+        <button class="local-test-btn" id="localTestBtn">Start localhost test room</button>
+        <p id="localTestStatus" class="local-test-status">Test host and guest together before connecting LiveKit.</p>
+        <p class="privacy-note">Fambridgelive reads rooms and attendees already joined through each platform.</p>
       </section>
 
       <section class="panel-card host-card">
-        <div class="section-heading"><div><span class="eyebrow">02 / HOST CAMERA</span><h2>Your preview</h2></div><span id="cameraState" class="tag">Camera off</span></div>
+        <div class="section-heading"><div><span class="eyebrow">02 / HOST CHECK</span><h2>Host feed</h2></div><span id="cameraState" class="tag">Host · Live</span></div>
+        <label class="host-name-field"><span>Host display name</span><input id="hostNameInput" maxlength="40" value="Keisha Brown" autocomplete="name"></label>
         <div class="host-preview" id="hostPreview">
           <video id="hostVideo" autoplay muted playsinline></video>
-          <div class="camera-placeholder"><div class="placeholder-avatar">KB</div><strong>Ready when you are</strong><span>Turn on camera to preview</span></div>
-          <div class="nameplate"><span>Keisha Brown · Host</span><em>HOST</em></div>
+          <div class="camera-placeholder"><div class="placeholder-avatar">KB</div><strong>Check before going live</strong><span>Preview your camera and sound privately</span></div>
+          <div class="nameplate"><span id="hostNameplate">Keisha Brown · Host</span><em>HOST</em></div>
         </div>
-        <div class="media-controls">
-          <button id="cameraBtn" class="round-btn" aria-label="Toggle camera">◉</button>
-          <button id="micBtn" class="round-btn" aria-label="Toggle microphone">♩</button>
-          <button id="shareBtn" class="round-btn" aria-label="Share screen">▣</button>
+        <div class="prelive-actions">
+          <button id="previewBtn" class="preview-btn">◎ Preview camera & sound</button>
+          <button id="goLiveBtn" class="go-live-btn" disabled>Go live</button>
+        </div>
+        <div class="media-controls" aria-label="Host preview controls">
+          <button id="cameraBtn" class="round-btn active" aria-label="Toggle host camera"><svg viewBox="0 0 24 24"><path d="M3 7h11a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2zm13 4 6-3v8l-6-3z"/></svg></button>
+          <button id="micBtn" class="round-btn active" aria-label="Toggle host microphone"><svg viewBox="0 0 24 24"><path d="M12 15a4 4 0 0 0 4-4V5a4 4 0 0 0-8 0v6a4 4 0 0 0 4 4zm7-4a7 7 0 0 1-14 0H3a9 9 0 0 0 8 8.94V23h2v-3.06A9 9 0 0 0 21 11z"/></svg></button>
+          <button id="whiteboardBtn" class="round-btn" aria-label="Open collaborative whiteboard"><svg viewBox="0 0 24 24"><path d="M3 3h18v14H3zM1 1v18h9v2H6v2h12v-2h-4v-2h9V1zm6 13 3-4 3 2 4-5 2 7z"/></svg></button>
           <span></span>
-          <button id="leaveBtn" class="round-btn danger" aria-label="Leave studio">↗</button>
+          <button id="leaveBtn" class="round-btn danger" aria-label="End host preview"><svg viewBox="0 0 24 24"><path d="M5 5l14 14m0-14L5 19"/></svg></button>
         </div>
       </section>
 
       <section class="panel-card quick-card">
         <button id="recordBtn" class="record-btn"><i></i><span>Start recording</span><time>00:00:00</time></button>
-        <div class="reaction-row" id="reactionRow"><button>👏</button><button>❤️</button><button>🔥</button><button>😂</button><button>🎉</button><button>💡</button></div>
+        <div class="reaction-row" id="reactionRow"><button>👏</button><button>❤️</button><button>🔥</button><button>😂</button><button>🎉</button><button>💡</button><button>👍</button><button>😮</button><button>🙌</button><button>💯</button><button>⭐</button><button>🎊</button></div>
       </section>
     </aside>
 
     <section class="stage-panel">
       <div class="stage-header">
         <div><span class="eyebrow">03 / LIVE ROOM</span><h1>People in your room</h1></div>
-        <div class="room-meta"><button id="copyInviteBtn" class="outline-btn">⌁ Copy invite link</button><span><b id="participantCount">12</b> connected</span></div>
+        <div class="room-meta"><button id="refreshBtn" class="outline-btn">↻ Refresh sources</button><span><b id="participantCount">13</b> detected</span></div>
       </div>
       <div id="participantGrid" class="participant-grid"></div>
-      <div class="stage-footer"><span><i></i> All systems operational</span><button id="layoutBtn">▦ Grid</button><button id="muteAllBtn">♩ Mute all</button><button id="inviteBtn">+ Invite guest</button></div>
+      <div class="stage-footer"><span><i></i> Monitoring connected platforms</span><button id="layoutBtn">▦ Grid</button><button id="shareMediaBtn">▶ Share media</button><button id="whiteboardStageBtn">✎ Whiteboard</button><button id="muteAudioBtn">♩ Mute all audio</button><button id="muteVideoBtn">◉ Turn off all video</button></div>
     </section>
 
     <aside class="chat-panel">
@@ -71,9 +80,9 @@
   <dialog id="integrationDialog">
     <form method="dialog" class="dialog-card">
       <div class="dialog-head"><div><span class="eyebrow">PRODUCTION SETUP</span><h2>Connections & APIs</h2></div><button class="icon-btn" value="cancel" aria-label="Close">×</button></div>
-      <p class="dialog-intro">Use a video-room provider for guests, a streaming provider for destinations, and webhooks for chat and attendance.</p>
+      <p class="dialog-intro">Connect platforms that already host the rooms. Fambridgelive displays joined members and monitors media they activate in those original apps; it does not create meeting links.</p>
       <div class="integration-list">
-        <label><span><b>Video room API</b><small>LiveKit, Daily, or Twilio Video</small></span><select id="videoProvider"><option>LiveKit</option><option>Daily</option><option>Twilio Video</option></select></label>
+        <label><span><b>Meeting platforms</b><small>Import rooms, members, camera and audio state</small></span><select id="videoProvider"><option>Zoom</option><option>Google Meet</option><option>Microsoft Teams</option></select></label>
         <label><span><b>Broadcast API</b><small>Mux Live or Cloudflare Stream</small></span><select><option>Mux Live</option><option>Cloudflare Stream</option></select></label>
         <label><span><b>Multi-platform output</b><small>RTMP destinations and stream keys</small></span><select><option>Restream</option><option>Custom RTMP</option></select></label>
         <label><span><b>Realtime data</b><small>Presence, chat, reactions, hand raise</small></span><select><option>Supabase Realtime</option><option>Firebase</option></select></label>
@@ -81,6 +90,12 @@
       <div class="api-note"><b>Security note</b><span>API secrets must live on a backend—not in this page. The deployed demo uses safe browser-only placeholders.</span></div>
       <button class="connect-btn" value="default">Save configuration</button>
     </form>
+  </dialog>
+  <dialog id="whiteboardDialog" class="workspace-dialog">
+    <section class="workspace-card"><header><div><span class="eyebrow">COLLABORATIVE SPACE</span><h2>Room whiteboard</h2></div><button class="icon-btn" data-close="whiteboardDialog" aria-label="Close whiteboard">×</button></header><div class="board-tools"><span>Pen</span><button class="color-swatch active" data-color="#101410" style="--swatch:#101410" aria-label="Black pen"></button><button class="color-swatch" data-color="#e84a4a" style="--swatch:#e84a4a" aria-label="Red pen"></button><button class="color-swatch" data-color="#3578e5" style="--swatch:#3578e5" aria-label="Blue pen"></button><button class="color-swatch" data-color="#20a464" style="--swatch:#20a464" aria-label="Green pen"></button><button class="color-swatch" data-color="#f0b429" style="--swatch:#f0b429" aria-label="Gold pen"></button><label>Size <input id="penSize" type="range" min="2" max="24" value="5"></label><button id="clearBoardBtn" class="outline-btn">Clear board</button></div><canvas id="whiteboardCanvas"></canvas></section>
+  </dialog>
+  <dialog id="mediaDialog" class="workspace-dialog">
+    <section class="workspace-card media-share-card"><header><div><span class="eyebrow">PLAY FOR THE ROOM</span><h2>Share video, audio, or a link</h2></div><button class="icon-btn" data-close="mediaDialog" aria-label="Close media sharing">×</button></header><label class="file-drop">Choose a video or audio file<input id="roomMediaFile" type="file" accept="video/*,audio/*"></label><div class="or-line"><span>or paste a direct media/web link</span></div><form id="roomLinkForm" class="link-share-form"><input id="roomLinkInput" type="url" placeholder="https://example.com/video.mp4" required><button class="connect-btn">Play for room</button></form><div id="hostSharedMedia" class="shared-media"></div></section>
   </dialog>
   <script src="app.js"></script>
 </body>

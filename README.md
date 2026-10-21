@@ -1,4 +1,4 @@
-# LiveBridge Host Studio
+# Fambridgelive Host Studio
 
 Responsive host dashboard prototype for running a multi-guest live event from one screen.
 

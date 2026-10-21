@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0b0f12">
+  <link rel="icon" href="assets/famyank-logo.png" type="image/png">
+  <title>Fambridgelive — Local Guest</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="product-clarity.css">
+  <link rel="stylesheet" href="guest.css">
+</head>
+<body class="guest-page">
+  <main class="guest-shell">
+    <header class="guest-header"><a class="brand" href="index.html" aria-label="Fambridge Live by Famyank"><img src="assets/famyank-logo.png" alt="Famyank — The Family Movement"><span class="brand-wordmark">FAMBRIDGE<em>LIVE</em></span></a><div class="guest-header-actions"><span id="guestStatus" class="status-pill"><i></i> Joining room…</span><button class="theme-toggle" id="guestThemeToggle" aria-label="Switch to light theme"><span class="theme-icon">☀</span><span class="theme-label">Light</span></button></div></header>
+    <section class="guest-stage">
+      <div class="guest-video-card"><video id="remoteVideo" autoplay playsinline></video><div id="remoteEmpty" class="guest-empty"><strong>Host video</strong><span>Appears here after you join</span></div><div class="guest-nameplate" id="guestHostNameplate">Host</div></div>
+      <div class="guest-video-card self"><video id="localVideo" autoplay muted playsinline></video><div class="guest-nameplate">You · Guest</div></div>
+    </section>
+    <section class="guest-actions">
+      <button id="joinBtn" class="connect-btn">Joining automatically…</button>
+      <button id="guestCameraBtn" class="round-btn active" disabled aria-label="Toggle camera"><svg viewBox="0 0 24 24"><path d="M3 7h11a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2zm13 4 6-3v8l-6-3z"/></svg></button>
+      <button id="guestMicBtn" class="round-btn active" disabled aria-label="Toggle microphone"><svg viewBox="0 0 24 24"><path d="M12 15a4 4 0 0 0 4-4V5a4 4 0 0 0-8 0v6a4 4 0 0 0 4 4zm7-4a7 7 0 0 1-14 0H3a9 9 0 0 0 8 8.94V23h2v-3.06A9 9 0 0 0 21 11z"/></svg></button>
+      <button id="guestWhiteboardBtn" class="round-btn" aria-label="Open whiteboard">✎</button>
+    </section>
+    <section class="guest-reactions panel-card"><span class="eyebrow">REACTIONS</span><div id="guestReactionRow" class="reaction-row"><button>👏</button><button>❤️</button><button>🔥</button><button>😂</button><button>🎉</button><button>💡</button><button>👍</button><button>😮</button><button>🙌</button><button>💯</button></div></section>
+    <section class="guest-room panel-card"><div class="section-heading"><div><span class="eyebrow">IN THE ROOM</span><h2>People</h2></div><span id="guestPeopleCount" class="count">2</span></div><div id="guestPeople" class="guest-people"></div></section>
+    <section id="guestSharedMedia" class="guest-shared-media panel-card" hidden><div class="section-heading"><div><span class="eyebrow">NOW PLAYING</span><h2>Shared by host</h2></div><button id="closeGuestMedia" class="icon-btn">×</button></div><div id="guestMediaPlayer" class="shared-media"></div></section>
+    <section class="guest-chat panel-card">
+      <div class="section-heading"><div><span class="eyebrow">TWO-WAY TEST</span><h2>Room chat</h2></div></div>
+      <div id="guestMessages" class="messages"><div class="empty-view"><strong>No messages yet</strong><span>Messages sent here will appear on the host screen.</span></div></div>
+      <form id="guestMessageForm" class="message-form"><input id="guestMessageInput" maxlength="180" placeholder="Message the host…"><button aria-label="Send message">↑</button></form>
+    </section>
+  </main>
+  <dialog id="guestWhiteboardDialog" class="workspace-dialog"><section class="workspace-card"><header><div><span class="eyebrow">COLLABORATIVE SPACE</span><h2>Room whiteboard</h2></div><button id="closeGuestBoard" class="icon-btn">×</button></header><div class="board-tools"><span>Pen</span><button class="color-swatch active" data-color="#101410" style="--swatch:#101410"></button><button class="color-swatch" data-color="#e84a4a" style="--swatch:#e84a4a"></button><button class="color-swatch" data-color="#3578e5" style="--swatch:#3578e5"></button><button class="color-swatch" data-color="#20a464" style="--swatch:#20a464"></button><button class="color-swatch" data-color="#f0b429" style="--swatch:#f0b429"></button><label>Size <input id="guestPenSize" type="range" min="2" max="24" value="5"></label><button id="guestClearBoard" class="outline-btn">Clear</button></div><canvas id="guestWhiteboardCanvas"></canvas></section></dialog>
+  <div id="toast" class="toast" role="status"></div>
+  <script src="guest.js"></script>
+</body>
+</html>
