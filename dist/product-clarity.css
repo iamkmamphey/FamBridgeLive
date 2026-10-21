@@ -273,3 +273,22 @@ body .guest-shared-media { position:fixed; inset:86px 20px 20px; z-index:40; wid
 .guest-bible-verse p { margin:6px 0 0; color:#b8c2be; font:400 12px/1.55 Georgia,serif; }
 :root[data-theme="light"] .guest-bible-verse { background:#f7fbfe; border-color:#a8c7dd; }
 :root[data-theme="light"] .guest-bible-verse p { color:#294b64; }
+.chat-reactions { margin:13px 0; padding:10px; border:1px solid #30393a; border-radius:11px; background:#0d1112; }
+.chat-reactions .reaction-row { margin-top:7px; padding-top:0; border-top:0; justify-content:flex-start; gap:7px; }
+.chat-reactions .reaction-row button { width:32px; height:32px; border-radius:8px; background:#171d1e; }
+body .guest-room { width:min(1000px,100%); }
+body .guest-people { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:11px; margin-top:14px; }
+.guest-person-tile { position:relative; min-height:155px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:15px; border:1px solid #30393a; border-radius:13px; background:linear-gradient(145deg,#182022,#0d1112); text-align:center; }
+.guest-person-tile.host-tile { border-color:#8c7431; box-shadow:inset 0 0 0 1px rgba(216,173,53,.16); }
+.tile-avatar { width:64px; height:64px; display:grid; place-items:center; border-radius:50%; background:var(--avatar); color:#101312; font:800 17px 'Space Grotesk'; }
+.guest-person-tile b,.guest-person-tile small { display:block; }
+.guest-person-tile b { color:#f2f5f3; font-size:11px; }
+.guest-person-tile small { margin-top:4px; color:#8b9692; font-size:8px; }
+.guest-person-tile small i { display:inline-block; width:5px; height:5px; margin-right:4px; border-radius:50%; background:#66e393; }
+.guest-person-tile em { position:absolute; top:8px; right:8px; padding:3px 5px; border-radius:4px; color:#17130a; background:#d8ad35; font-size:7px; font-style:normal; font-weight:900; }
+:root[data-theme="light"] .chat-reactions { background:#f4f9fc; border-color:#b7cfe0; }
+:root[data-theme="light"] .chat-reactions .reaction-row button { background:#fff; border:1px solid #c4d8e7; }
+:root[data-theme="light"] .guest-person-tile { background:linear-gradient(145deg,#fff,#edf5fa); border-color:#b8d0e1; }
+:root[data-theme="light"] .guest-person-tile.host-tile { border-color:#d19b22; }
+:root[data-theme="light"] .guest-person-tile b { color:#123d61; }
+:root[data-theme="light"] .guest-person-tile small { color:#48677e; }
