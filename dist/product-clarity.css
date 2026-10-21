@@ -202,3 +202,32 @@ button:focus-visible { outline-color:#d8ad35; }
 :root[data-theme="light"] .deck-heading h3 { color:#143d5e; }
 :root[data-theme="light"] .volume-control,:root[data-theme="light"] .voice-priority { color:#36566e; }
 @media(max-width:650px){.background-controls{grid-template-columns:1fr 1fr}.volume-control{grid-column:1/-1}.voice-priority{grid-column:1/-1}}
+body .guest-shared-media { position:fixed; inset:86px 20px 20px; z-index:40; width:min(1100px,calc(100% - 40px)); margin:auto; overflow:auto; border:2px solid #d8ad35; box-shadow:0 28px 90px rgba(0,0,0,.68); }
+.guest-shared-media::before { content:''; position:fixed; inset:0; z-index:-1; background:rgba(3,7,9,.76); backdrop-filter:blur(8px); }
+.shared-media-actions { display:flex; align-items:center; gap:8px; }
+.guest-shared-media .shared-media video { display:block; width:100%; height:min(70vh,720px); object-fit:contain; background:#000; }
+.guest-shared-media .shared-media audio { min-height:64px; }
+:root[data-theme="light"] .privacy-note,
+:root[data-theme="light"] .local-test-status,
+:root[data-theme="light"] .camera-placeholder,
+:root[data-theme="light"] .camera-placeholder span,
+:root[data-theme="light"] .stage-footer,
+:root[data-theme="light"] .room-meta,
+:root[data-theme="light"] .tabs button,
+:root[data-theme="light"] .person-row small,
+:root[data-theme="light"] .guest-person small,
+:root[data-theme="light"] .empty-view,
+:root[data-theme="light"] .deck-note { color:#48677e; }
+:root[data-theme="light"] .tag { color:#174f79; background:#e5f1fa; border-color:#a9c8df; }
+:root[data-theme="light"] .source-chip,
+:root[data-theme="light"] .participant-top strong { color:#fff; background:rgba(10,48,78,.88); }
+:root[data-theme="light"] .participant-bottom { color:#fff; }
+:root[data-theme="light"] .message p { color:#294b64; }
+:root[data-theme="light"] .message-head time,
+:root[data-theme="light"] .platform-label { color:#53758d; }
+:root[data-theme="light"] .tabs button.active { color:#0f4f80; font-weight:800; }
+:root[data-theme="light"] .section-heading h2,
+:root[data-theme="light"] .chat-head h2,
+:root[data-theme="light"] .stage-header h1 { color:#102f48; }
+:root[data-theme="light"] .outline-btn { color:#164f7a; border-color:#93b8d3; background:#f7fbfe; }
+@media(max-width:650px){body .guest-shared-media{inset:72px 8px 8px;width:calc(100% - 16px)}}
