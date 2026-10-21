@@ -35,6 +35,9 @@ async function handleSignal({data}){
   if(data.type==='board-stroke'){boardHistory.push(data.segment);drawBoardSegment(data.segment);return}
   if(data.type==='board-state'){boardHistory=data.history||[];redrawBoard();return}
   if(data.type==='board-clear'){clearBoard(false);return}
+  if(data.type==='board-open'){if(data.history){boardHistory=data.history;redrawBoard()}if(!$('#guestWhiteboardDialog').open)$('#guestWhiteboardDialog').showModal();toast('The host opened the whiteboard');return}
+  if(data.type==='board-close'){if($('#guestWhiteboardDialog').open)$('#guestWhiteboardDialog').close();return}
+  if(data.type==='bible-passage'){$('#guestBibleReference').textContent=data.reference;$('#guestBibleText').textContent=data.text;$('#guestBibleTranslation').textContent=data.translation;$('#guestBibleDisplay').hidden=false;toast(`${data.reference} is now on screen`);return}
   if(data.type==='shared-media'){showSharedMedia(data);return}
   if(data.type==='background-audio'){loadGuestBackground(data);return}
   if(data.type==='background-volume'||data.type==='background-base-volume'){if(guestBackgroundAudio)guestBackgroundAudio.volume=Math.max(0,Math.min(.35,data.volume));$('#guestBackgroundVolume').textContent=`${Math.round(data.volume*100)}%`;return}
@@ -59,6 +62,7 @@ $('#guestReactionRow').onclick=e=>{if(e.target.tagName==='BUTTON'){showReaction(
 $('#guestWhiteboardBtn').onclick=()=>$('#guestWhiteboardDialog').showModal();$('#closeGuestBoard').onclick=()=>$('#guestWhiteboardDialog').close();$('#guestClearBoard').onclick=()=>clearBoard(true);
 document.querySelectorAll('#guestWhiteboardDialog .color-swatch').forEach(button=>button.onclick=()=>{document.querySelectorAll('#guestWhiteboardDialog .color-swatch').forEach(x=>x.classList.remove('active'));button.classList.add('active');boardColor=button.dataset.color});
 $('#guestPenSize').oninput=e=>boardSize=Number(e.target.value);$('#guestMediaSound').onclick=()=>{if(!currentGuestMedia)return;currentGuestMedia.muted=false;currentGuestMedia.play?.().catch(()=>{});$('#guestMediaSound').hidden=true};
+$('#closeGuestBible').onclick=()=>$('#guestBibleDisplay').hidden=true;
 $('#guestMediaSize').onclick=()=>{const panel=$('#guestSharedMedia');panel.classList.toggle('minimized');$('#guestMediaSize').textContent=panel.classList.contains('minimized')?'+ Expand':'− Minimize'};
 $('#guestMediaFullscreen').onclick=()=>{$('#guestSharedMedia').requestFullscreen?.().catch(()=>toast('Fullscreen is not available in this browser'))};
 $('#guestMediaPip').onclick=async()=>{if(currentGuestMedia?.tagName!=='VIDEO'){toast('Pop-out view is available for video');return}try{await currentGuestMedia.requestPictureInPicture()}catch{toast('Picture-in-Picture is not available in this browser')}};

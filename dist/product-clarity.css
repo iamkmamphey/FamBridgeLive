@@ -242,3 +242,24 @@ body .guest-shared-media { position:fixed; inset:86px 20px 20px; z-index:40; wid
 :root[data-theme="light"] .stage-header h1 { color:#102f48; }
 :root[data-theme="light"] .outline-btn { color:#164f7a; border-color:#93b8d3; background:#f7fbfe; }
 @media(max-width:650px){body .guest-shared-media{inset:72px 8px 8px;width:calc(100% - 16px)}}
+.workspace-actions { display:flex; align-items:center; gap:8px; }
+.compact-action { width:auto; height:36px; padding:0 14px; }
+.compact-action.is-live { color:#fff; background:#1769aa; }
+.bible-lookup { display:grid; grid-template-columns:1fr 190px 150px; gap:8px; }
+.bible-lookup input,.bible-lookup select { min-width:0; border:1px solid #34403e; border-radius:9px; padding:10px; background:#0d1112; color:#eef3f1; }
+.bible-help { color:#8f9996; font-size:10px; }
+.bible-results { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:9px; max-height:58vh; overflow:auto; }
+.bible-passage-button { padding:12px; border:1px solid #34403e; border-radius:10px; background:#101617; color:#e6eeeb; text-align:left; cursor:pointer; }
+.bible-passage-button strong,.bible-passage-button span { display:block; }
+.bible-passage-button strong { color:#e5c45e; margin-bottom:6px; font-size:11px; }
+.bible-passage-button span { color:#aeb9b5; font:400 11px/1.55 Georgia,serif; }
+.bible-passage-button.full-passage { grid-column:1/-1; border-color:#8c7431; }
+.guest-bible-display { position:fixed; left:50%; bottom:24px; z-index:45; width:min(760px,calc(100% - 28px)); transform:translateX(-50%); display:flex; justify-content:space-between; gap:18px; padding:22px; border:2px solid #d8ad35; border-radius:16px; background:rgba(10,16,18,.96); color:#fff; box-shadow:0 26px 80px rgba(0,0,0,.62); backdrop-filter:blur(14px); }
+.guest-bible-display[hidden] { display:none; }
+.guest-bible-display blockquote { margin:8px 0; font:500 clamp(17px,2.4vw,28px)/1.45 Georgia,serif; }
+.guest-bible-display small { color:#d8ad35; }
+:root[data-theme="light"] .bible-lookup input,:root[data-theme="light"] .bible-lookup select { color:#123d61; background:#fff; border-color:#9cbdd5; }
+:root[data-theme="light"] .bible-passage-button { color:#143d5e; background:#f7fbfe; border-color:#a8c7dd; }
+:root[data-theme="light"] .bible-passage-button span { color:#294b64; }
+:root[data-theme="light"] .guest-bible-display { color:#123d61; background:rgba(255,255,255,.97); border-color:#d19b22; }
+@media(max-width:700px){.bible-lookup{grid-template-columns:1fr}.guest-bible-display{bottom:10px;padding:15px}.workspace-actions{flex-wrap:wrap;justify-content:flex-end}}
