@@ -11,7 +11,43 @@
 }
 
 #guestWhiteboardCanvas {
+  width: 100%;
+  height: min(62vh, 600px);
+  display: block;
+  margin-top: 14px;
+  border: 1px solid #d8ad35;
+  border-radius: 10px;
+  background: #fff;
   cursor: default;
   touch-action: auto;
   user-select: none;
+}
+
+#guestWhiteboardCanvas[hidden] {
+  display: none;
+}
+
+.guest-whiteboard {
+  margin: 14px auto;
+  width: min(800px, 100%);
+}
+
+.guest-board-waiting {
+  min-height: 150px;
+  margin-top: 14px;
+  display: grid;
+  place-content: center;
+  gap: 6px;
+  border: 1px dashed #52605d;
+  border-radius: 10px;
+  text-align: center;
+  color: #9ca6a4;
+}
+
+.guest-board-waiting[hidden] {
+  display: none;
+}
+
+.guest-board-waiting strong {
+  color: var(--ink);
 }
