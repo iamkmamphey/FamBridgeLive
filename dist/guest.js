@@ -35,8 +35,8 @@ async function handleSignal({data}){
   if(data.type==='board-stroke'){boardHistory.push(data.segment);drawBoardSegment(data.segment);return}
   if(data.type==='board-state'){boardHistory=data.history||[];redrawBoard();return}
   if(data.type==='board-clear'){clearBoard(false);return}
-  if(data.type==='board-open'){if(data.history)boardHistory=data.history;$('#guestWhiteboardCanvas').hidden=false;$('#guestBoardWaiting').hidden=true;$('#guestBoardStatus').textContent='Live from host';redrawBoard();$('#guestWhiteboardSection').scrollIntoView({behavior:'smooth',block:'center'});toast('The host opened the whiteboard');return}
-  if(data.type==='board-close'){$('#guestWhiteboardCanvas').hidden=true;$('#guestBoardWaiting').hidden=false;$('#guestBoardStatus').textContent='Waiting for host';return}
+  if(data.type==='board-open'){if(data.history)boardHistory=data.history;const dialog=$('#guestWhiteboardDialog');if(!dialog.open)dialog.showModal();redrawBoard();toast('The host opened the whiteboard');return}
+  if(data.type==='board-close'){const dialog=$('#guestWhiteboardDialog');if(dialog.open)dialog.close();toast('The host hid the whiteboard');return}
   if(data.type==='bible-passage'){showBiblePassage(data);return}
   if(data.type==='shared-media'){showSharedMedia(data);return}
   if(data.type==='background-audio'){loadGuestBackground(data);return}
@@ -59,12 +59,12 @@ function clearBoard(){boardHistory=[];const canvas=$('#guestWhiteboardCanvas');c
 $('#joinBtn').onclick=joinRoom;
 $('#hostAudioBtn').onclick=()=>{const video=$('#remoteVideo');video.muted=false;video.play().catch(()=>{});$('#hostAudioBtn').hidden=true};
 $('#guestThemeToggle').onclick=()=>applyTheme(document.documentElement.dataset.theme==='light'?'dark':'light');
+$('#guestWhiteboardDialog').addEventListener('cancel',event=>event.preventDefault());
 $('#guestCameraBtn').onclick=e=>{e.currentTarget.classList.toggle('active');localStream?.getVideoTracks().forEach(track=>track.enabled=e.currentTarget.classList.contains('active'))};
 $('#guestMicBtn').onclick=e=>{e.currentTarget.classList.toggle('active');localStream?.getAudioTracks().forEach(track=>track.enabled=e.currentTarget.classList.contains('active'))};
 $('#guestMessageForm').onsubmit=e=>{e.preventDefault();const input=$('#guestMessageInput'),text=input.value.trim();if(!text)return;if(!signal){toast('Room chat is still connecting');return}signal.postMessage({type:guestPrivateMode?'guest-private-chat':'guest-chat',text});addMessage(guestPrivateMode?'You · Private':'You',guestPrivateMode?`🔒 ${text}`:text,true);input.value=''};
 $('#guestReactionRow').onclick=e=>{if(e.target.tagName==='BUTTON'){showReaction(e.target.textContent);signal?.postMessage({type:'reaction',emoji:e.target.textContent})}};
 $('#guestBibleForm').onsubmit=async e=>{e.preventDefault();const reference=$('#guestBibleReferenceInput').value.trim(),translation=$('#guestBibleTranslationInput').value,results=$('#guestBibleResults');results.innerHTML='<div class="empty-view"><strong>Loading scripture…</strong></div>';try{const response=await fetch(`https://bible-api.com/${encodeURIComponent(reference)}?translation=${encodeURIComponent(translation)}`);if(!response.ok)throw new Error();const passage=await response.json();renderGuestBiblePassage(passage,passage.translation_name||translation)}catch{results.innerHTML='<div class="empty-view"><strong>Passage not found</strong><span>Check the reference and try again.</span></div>'}};
-$('#guestWhiteboardBtn').onclick=()=>{$('#guestWhiteboardSection').scrollIntoView({behavior:'smooth',block:'center'});if($('#guestWhiteboardCanvas').hidden)toast('Waiting for the host to show the whiteboard')};
 $('#guestMediaSound').onclick=()=>{if(!currentGuestMedia)return;currentGuestMedia.muted=false;currentGuestMedia.play?.().catch(()=>{});$('#guestMediaSound').hidden=true};
 $('#closeGuestBible').onclick=()=>$('#guestBibleDisplay').hidden=true;
 $('#guestMediaSize').onclick=()=>{const panel=$('#guestSharedMedia');panel.classList.toggle('minimized');$('#guestMediaSize').textContent=panel.classList.contains('minimized')?'+ Expand':'− Minimize'};
