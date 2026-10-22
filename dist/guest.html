@@ -11,7 +11,8 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="product-clarity.css">
-  <link rel="stylesheet" href="guest.css">
+<link rel="stylesheet" href="guest.css">
+<link rel="stylesheet" href="guest-whiteboard.css">
 </head>
 <body class="guest-page">
   <main class="guest-shell">
@@ -38,7 +39,7 @@
       <form id="guestMessageForm" class="message-form"><input id="guestMessageInput" maxlength="180" placeholder="Message the host…"><button aria-label="Send message">↑</button></form>
     </section>
   </main>
-  <dialog id="guestWhiteboardDialog" class="workspace-dialog"><section class="workspace-card"><header><div><span class="eyebrow">COLLABORATIVE SPACE</span><h2>Room whiteboard</h2></div><button id="closeGuestBoard" class="icon-btn">×</button></header><div class="board-tools"><span>Pen</span><button class="color-swatch active" data-color="#101410" style="--swatch:#101410"></button><button class="color-swatch" data-color="#e84a4a" style="--swatch:#e84a4a"></button><button class="color-swatch" data-color="#3578e5" style="--swatch:#3578e5"></button><button class="color-swatch" data-color="#20a464" style="--swatch:#20a464"></button><button class="color-swatch" data-color="#f0b429" style="--swatch:#f0b429"></button><label>Size <input id="guestPenSize" type="range" min="2" max="24" value="5"></label><button id="guestClearBoard" class="outline-btn">Clear</button></div><canvas id="guestWhiteboardCanvas"></canvas></section></dialog>
+  <dialog id="guestWhiteboardDialog" class="workspace-dialog"><section class="workspace-card"><header><div><span class="eyebrow">HOST PRESENTATION</span><h2>Room whiteboard</h2><p class="guest-board-note">View only · The host controls this whiteboard</p></div><button id="closeGuestBoard" class="icon-btn">×</button></header><canvas id="guestWhiteboardCanvas" aria-label="Host whiteboard presentation"></canvas></section></dialog>
   <div id="toast" class="toast" role="status"></div>
   <script src="guest.js"></script>
 </body>

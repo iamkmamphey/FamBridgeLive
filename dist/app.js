@@ -60,8 +60,6 @@ async function handleLocalSignal({data}){
   if(data.type==='reaction'){showReaction(data.emoji);showToast(`Local Guest reacted ${data.emoji}`);return}
   if(data.type==='guest-chat'){addRemoteMessage('Local Guest',data.text);return}
   if(data.type==='guest-private-chat'){messages.push(['Local Guest',`🔒 ${data.text}`,'#73d6ff','Private']);renderMessages();showToast('Private reply received from Local Guest');return}
-  if(data.type==='board-stroke'){boardHistory.push(data.segment);drawBoardSegment(data.segment);return}
-  if(data.type==='board-clear'){clearBoard(false);return}
   if(!localPeer)return;
   if(data.type==='answer')await localPeer.setRemoteDescription(data.answer);
   if(data.type==='ice'&&data.candidate)await localPeer.addIceCandidate(data.candidate).catch(()=>{});

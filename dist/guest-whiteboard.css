@@ -1,0 +1,17 @@
+.guest-board-note {
+  margin: 5px 0 0;
+  color: #9ca6a4;
+  font-size: 11px;
+}
+
+.guest-board-note::before {
+  content: "👁 ";
+  color: #f0b429;
+  font-weight: 700;
+}
+
+#guestWhiteboardCanvas {
+  cursor: default;
+  touch-action: auto;
+  user-select: none;
+}
