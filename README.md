@@ -2,6 +2,8 @@
 
 Passwordless guest video rooms with adaptive video, audio, chat, reactions, screen sharing, waiting-room approval, moderation, captions, recording, and a collaborative whiteboard.
 
+Video quality is selected automatically by adaptive streaming; hosts and guests do not need to configure a data mode.
+
 ## Local setup
 
 1. Copy `.env.example` to `.env.local`.
