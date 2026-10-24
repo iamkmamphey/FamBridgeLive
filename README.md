@@ -1,24 +1,27 @@
-# Fambridgelive Host Studio
+# FamBridge Live
 
-Responsive host dashboard prototype for running a multi-guest live event from one screen.
+Passwordless guest video rooms with adaptive video, audio, chat, reactions, screen sharing, waiting-room approval, moderation, captions, recording, and a collaborative whiteboard.
 
-## What works in this prototype
+## Local setup
 
-- Responsive participant grid with featured-speaker switching
-- Guest/source link inputs and connection-state feedback
-- Real browser camera/microphone preview via `getUserMedia`
-- Screen sharing via `getDisplayMedia`
-- Host controls, mute-all, reactions, chat, invite-link copy, layout switching, and recording timer
-- Integration configuration map for production video, broadcast, RTMP, and realtime APIs
+1. Copy `.env.example` to `.env.local`.
+2. Add credentials from a LiveKit Cloud project.
+3. Generate a long random value for `FAMBRIDGE_INVITE_SECRET`.
+4. Run `npm install` and `npm run dev`.
+5. Open `http://127.0.0.1:5173/signin-with-chatgpt?return_to=/` to use the local host identity.
 
-## Production API architecture
+## Required runtime variables
 
-The browser UI must not contain secret API keys. A production backend should issue short-lived room tokens and handle webhooks.
+- `LIVEKIT_URL`
+- `LIVEKIT_API_KEY`
+- `LIVEKIT_API_SECRET`
+- `FAMBRIDGE_INVITE_SECRET`
 
-1. **Guest video:** LiveKit, Daily, or Twilio Video (WebRTC room, participant tracks, moderation).
-2. **Broadcast:** Mux Live or Cloudflare Stream (recording, transcoding, playback).
-3. **Destinations:** Restream or direct RTMP output for platforms that support stream keys.
-4. **Realtime state:** Supabase Realtime or Firebase for presence, chat, reactions, and queue state.
-5. **Backend endpoints:** `/api/rooms`, `/api/rooms/:id/token`, `/api/destinations`, `/api/webhooks/video`, `/api/recordings`.
+The host is authenticated by the hosting platform. Guests receive an expiring signed invitation URL and do not need an account.
 
-Zoom, Google Meet, WhatsApp, TikTok, and similar consumer services generally cannot be "merged" by simply pasting a call URL. Use their approved SDK/API where available, or invite those guests into the app's own WebRTC room. Platform livestream outputs should use each platform's official RTMP/API permissions.
+## Verification
+
+```bash
+npx tsc --noEmit
+npm run build
+```
