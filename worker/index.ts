@@ -5,6 +5,13 @@ import { runWithRuntimeEnv } from "../lib/runtime-env";
 
 const worker = {
   fetch(request: Request, env: Cloudflare.Env, ctx: ExecutionContext<{ CONNECTORS?: ConnectorBinding }>) {
+    // Vinext route modules can be evaluated in a separate module graph. Mirror
+    // server-only string bindings into Node's Worker process environment so
+    // every API route receives the same encrypted production configuration.
+    for (const key of ["LIVEKIT_URL", "LIVEKIT_API_KEY", "LIVEKIT_API_SECRET", "FAMBRIDGE_INVITE_SECRET", "RESEND_API_KEY", "SIGNIN_FROM_EMAIL", "ADMIN_TRACKING_EMAIL"] as const) {
+      const value = env[key];
+      if (typeof value === "string" && value) process.env[key] = value;
+    }
     let binding = ctx.props?.CONNECTORS;
     // Local preview emulates the same request-scoped capability. This branch and
     // the auxiliary service binding are absent from production builds.
