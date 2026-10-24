@@ -1,19 +1,15 @@
-import { getChatGPTUser } from "@/app/chatgpt-auth";
+import { getHostSession } from "@/lib/host-auth";
 import FamBridgeStudio from "@/components/fambridge-studio";
 import HostLanding from "@/components/host-landing";
-import HostSignInTracker from "@/components/host-signin-tracker";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home({ searchParams }: { searchParams: Promise<{ room?: string; invite?: string }> }) {
   const params = await searchParams;
   const isGuestInvite = Boolean(params.room && params.invite);
-  const user = await getChatGPTUser();
+  const host = await getHostSession();
 
-  if (!isGuestInvite && !user) return <HostLanding />;
+  if (!isGuestInvite && !host) return <HostLanding />;
 
-  return <>
-    {user && !isGuestInvite && <HostSignInTracker />}
-    <FamBridgeStudio hostAuthenticated={Boolean(user)} hostName={user?.displayName || "FamBridge Host"} />
-  </>;
+  return <FamBridgeStudio hostAuthenticated={Boolean(host)} hostName={host?.name || "FamBridge Host"} />;
 }

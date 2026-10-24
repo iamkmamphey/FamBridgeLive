@@ -3,6 +3,7 @@
 Passwordless guest video rooms with adaptive video, audio, chat, reactions, screen sharing, waiting-room approval, moderation, captions, recording, and a collaborative whiteboard.
 
 Video quality is selected automatically by adaptive streaming; hosts and guests do not need to configure a data mode.
+Hosts enter their name, email, and phone number to create a signed host session. Guests still join only through the private invitation URL.
 
 ## Local setup
 

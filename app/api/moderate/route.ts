@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { RoomServiceClient } from "livekit-server-sdk";
 import { getRuntimeEnv } from "@/lib/runtime-env";
+import { getHostSession } from "@/lib/host-auth";
 
 export async function POST(request: Request) {
-  if (!request.headers.get("oai-authenticated-user-id") && process.env.NODE_ENV === "production") return NextResponse.json({ error: "Host sign-in required" }, { status: 401 });
+  if (!await getHostSession()) return NextResponse.json({ error: "Host sign-in required" }, { status: 401 });
   const { room, identity, action, trackSid } = await request.json() as { room: string; identity: string; action: string; trackSid?: string };
   const env = getRuntimeEnv();
   const url = env.LIVEKIT_URL?.replace(/^wss:/, "https:").replace(/^ws:/, "http:");

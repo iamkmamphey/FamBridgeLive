@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 import { getRuntimeEnv } from "@/lib/runtime-env";
+import { getHostSession } from "@/lib/host-auth";
 import { AccessToken } from "livekit-server-sdk";
 
 export async function POST(request: Request) {
@@ -8,7 +9,7 @@ export async function POST(request: Request) {
   const env = getRuntimeEnv();
   const url = env.LIVEKIT_URL, apiKey = env.LIVEKIT_API_KEY, apiSecret = env.LIVEKIT_API_SECRET;
   if (!url || !apiKey || !apiSecret) return NextResponse.json({ error: "LiveKit is not configured" }, { status: 503 });
-  const isHost = role === "host" && Boolean(request.headers.get("oai-authenticated-user-id") || process.env.NODE_ENV !== "production");
+  const isHost = role === "host" && Boolean(await getHostSession());
   if (!isHost) {
     try {
       const verified = await jwtVerify(String(invite || ""), new TextEncoder().encode(env.FAMBRIDGE_INVITE_SECRET || ""));
